@@ -52,7 +52,7 @@ public class FileLogProvider : ILogProvider
     {
         if (level > CurrentFilterLevel) return;
         var now = DateTime.Now;
-        var fullMessage = $"[{now.ToString(TimestampFormat)}] [{name}] [{level.AsString()}] {message}";
+        var fullMessage = $"[{now.ToString(TimestampFormat)}] [{level.AsString()}] [{name}] {message}";
         if (MirrorToUnityLog)
         {
             Debug.unityLogger.Log(level.AsLogType(),fullMessage);
