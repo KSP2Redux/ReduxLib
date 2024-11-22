@@ -2,6 +2,7 @@
 using ReduxLib.Configuration;
 using ReduxLib.Logging;
 using UnityEngine;
+using UnityEngine.UIElements;
 using ILogger = ReduxLib.Logging.ILogger;
 
 namespace ReduxLib;
@@ -70,7 +71,21 @@ public class ReduxLib : MonoBehaviour
         };
         DontDestroyOnLoad(Instance);
         Logger.LogInfo("Redux Lib Initialized, calling callbacks!");
-        OnReduxLibInitialized?.Invoke();
+        if (OnReduxLibInitialized != null)
+        {
+            // Do this manually so even if an error happens, later ones aren't affected
+            foreach (var del in OnReduxLibInitialized.GetInvocationList())
+            {
+                try
+                {
+                    del.Method.Invoke(del.Target, new object[] { });
+                }
+                catch (Exception e)
+                {
+                    Logger.LogError(e);
+                }
+            }
+        }
         Logger.LogInfo("Redux Lib callbacks complete!");
     }
 
