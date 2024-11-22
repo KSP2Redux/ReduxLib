@@ -1,35 +1,46 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
 namespace ReduxLib.Logging;
 
-public class FileLogProvider : IDisposable, IAsyncDisposable, ILogProvider
+public class FileLogProvider : ILogProvider
 {
-    private StreamWriter _logStream;
+    // private StreamWriter _logStream;
 
     // Both of these will be set in configuration, or by the person constructing the stream
     public LogLevel CurrentFilterLevel = LogLevel.Info;
     public bool MirrorToUnityLog = true;
     public string TimestampFormat = "MM/dd/yyyy HH:mm:ss";
+
+    private string _file;
+    private StringBuilder _cachedSb = new();
     
     public FileLogProvider(string logFile)
     {
-        _logStream = new StreamWriter(File.OpenWrite(logFile));
+        Debug.Log($"Creating redux log file at {logFile}");
+        if (File.Exists(logFile))
+        {
+            if (File.Exists($"{logFile}.old"))
+            {
+                File.Delete($"{logFile}.old");
+            }
+            File.Copy(logFile, $"{logFile}.old");
+        }
+        _file = logFile;
     }
     
     public void Dispose()
     {
         FlushLogs();
-        _logStream.Dispose();
     }
 
     public async ValueTask DisposeAsync()
     {
         FlushLogs();
-        await _logStream.DisposeAsync();
     }
 
     public ILogger GetLogger(string name) => new FileLogger(name, this);
@@ -51,9 +62,20 @@ public class FileLogProvider : IDisposable, IAsyncDisposable, ILogProvider
     // This should be done every frame, by some update cycle
     internal void FlushLogs()
     {
+        if (_synchronizedLogs.IsEmpty) return;
+        // TODO: Figure out how to constantly have a log file open?
+        
+        _cachedSb.Clear();
         while (_synchronizedLogs.TryDequeue(out var nextMessage))
         {
-            _logStream.WriteLine(nextMessage);
+            _cachedSb.AppendLine(nextMessage);
         }
+        
+        File.AppendAllText(_file, _cachedSb.ToString());
+    }
+
+    ~FileLogProvider()
+    {
+        FlushLogs();
     }
 }

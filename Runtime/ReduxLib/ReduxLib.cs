@@ -46,11 +46,13 @@ public class ReduxLib : MonoBehaviour
             "Mirror redux logs to unity's debug output?"));
         _logTimestampFormat = new(ReduxCoreConfig.Bind("Logging", "Timestamp Format", "MM/dd/yyyy HH:mm:ss",
             "The timestamp format for logs\n(in C#'s Datetime.ToString format)"));
-        _reduxLogProvider = new FileLogProvider(Application.isEditor ? LOG_LOCATION_EDITOR : LOG_LOCATION_PLAYER);
         
-        _reduxLogProvider.CurrentFilterLevel = _filterLogLevel.Value;
-        _reduxLogProvider.MirrorToUnityLog = _mirrorLogsToUnity.Value;
-        _reduxLogProvider.TimestampFormat = _logTimestampFormat.Value;
+        _reduxLogProvider = new FileLogProvider(Application.isEditor ? LOG_LOCATION_EDITOR : LOG_LOCATION_PLAYER)
+            {
+                CurrentFilterLevel = _filterLogLevel.Value,
+                MirrorToUnityLog = _mirrorLogsToUnity.Value,
+                TimestampFormat = _logTimestampFormat.Value
+            };
 
         _filterLogLevel.RegisterCallback((_, to) => _reduxLogProvider.CurrentFilterLevel = to);
         _mirrorLogsToUnity.RegisterCallback((_, to) => _reduxLogProvider.MirrorToUnityLog = to);
