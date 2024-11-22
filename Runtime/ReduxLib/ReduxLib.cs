@@ -64,7 +64,7 @@ public class ReduxLib : MonoBehaviour
     {
         Instance = new GameObject("Redux Manager")
         {
-            tag = "GameManager",
+            tag = "Game Manager",
         };
         DontDestroyOnLoad(Instance);
         Logger.LogInfo("Redux Lib Initialized, calling callbacks!");
@@ -72,6 +72,19 @@ public class ReduxLib : MonoBehaviour
         Logger.LogInfo("Redux Lib callbacks complete!");
     }
 
+    public static ILogger GetLogger(string name)
+    {
+        return _reduxLogProvider.GetLogger(name);
+    }
+    
+    public static GameObject GetAlwaysLoadedObject(string name)
+    {
+        var result = new GameObject(name)
+        {
+            tag = "Game Manager"
+        };
+        return result;
+    }
 
     public void Update()
     {
