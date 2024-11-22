@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Text;
 using JetBrains.Annotations;
-using KSP.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.UnityConverters.Configuration;
 using UnityEngine;
-using UniLinq;
 
 namespace ReduxLib.Configuration;
 
@@ -81,6 +82,15 @@ public class JsonConfigFile : IConfigFile
 
     private static List<JsonConverter>? _defaultConverters;
 
+    private static List<JsonConverter>? CreateDefaultConverters()
+    {
+        var method = Assembly.Load("Newtonsoft.Json.UnityConverters")
+            .GetType("Newtonsoft.Json.UnityConverters.UnityConverterInitializer")
+            .GetMethod("CreateConverters", BindingFlags.Static | BindingFlags.NonPublic)!;
+        var parameters = new object[] { ScriptableObject.CreateInstance<UnityConvertersConfig>() };
+        return (List<JsonConverter>)method.Invoke(null, parameters);
+    }
+    
     /// <summary>
     /// The default converters to use when serializing/deserializing JSON.
     /// </summary>
@@ -89,7 +99,7 @@ public class JsonConfigFile : IConfigFile
         get
         {
             if (_defaultConverters != null) return _defaultConverters;
-            _defaultConverters = IOProvider.CreateDefaultConverters();
+            _defaultConverters = CreateDefaultConverters();
             _defaultConverters!.Add(new StringEnumConverter());
 
             return _defaultConverters;
