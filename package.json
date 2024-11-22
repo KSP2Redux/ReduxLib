@@ -1,0 +1,18 @@
+﻿{
+  "name": "redux-lib",
+  "version": "0.1.0",
+  "displayName": "KSP2 Redux Library",
+  "description": "This package contains code for developing KSP2 Redux",
+  "unity": "2022.3",
+  "unityRelease": "5f1",
+  "documentationUrl": "https://git.rendezvous.dev/rendezvous-entertainment/redux-lib",
+  "licensesUrl": "https://git.rendezvous.dev/rendezvous-entertainment/redux-lib/main/LICENSE",
+  "hideInEditor": false,
+  "keywords": [
+    "ksp",
+    "mods"
+  ],
+  "author": {
+    "name": "rendezvous entertainment"
+  }
+}
