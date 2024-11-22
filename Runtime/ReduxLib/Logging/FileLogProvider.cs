@@ -29,6 +29,7 @@ public class FileLogProvider : ILogProvider
                 File.Delete($"{logFile}.old");
             }
             File.Copy(logFile, $"{logFile}.old");
+            File.Delete(logFile);
         }
         _file = logFile;
     }
