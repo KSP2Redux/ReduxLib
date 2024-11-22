@@ -69,6 +69,7 @@ public class ReduxLib : MonoBehaviour
         {
             tag = "Game Manager",
         };
+        Instance.AddComponent<ReduxLib>();
         DontDestroyOnLoad(Instance);
         Logger.LogInfo("Redux Lib Initialized, calling callbacks!");
         if (OnReduxLibInitialized != null)
@@ -100,6 +101,7 @@ public class ReduxLib : MonoBehaviour
         {
             tag = "Game Manager"
         };
+        result.transform.SetParent(Instance.transform);
         return result;
     }
 
