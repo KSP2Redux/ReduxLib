@@ -14,6 +14,8 @@ public class ReduxLib : MonoBehaviour
     public static GameObject Instance { get; private set; } = null!;
 
 
+    public const string REDUX_FOLDER = "Redux";
+
     private const string LOG_LOCATION_EDITOR = "./Assets/redux.log";
     private const string LOG_LOCATION_PLAYER = "./redux.log";
 
