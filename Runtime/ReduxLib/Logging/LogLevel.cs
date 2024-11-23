@@ -50,12 +50,12 @@ public static class LogLevelExtensions
     {
         return level switch
         {
-            >= LogLevel.Debug => "DBG",
-            >= LogLevel.Info => "INF",
-            >= LogLevel.Message => "MSG",
-            >= LogLevel.Warning => "WRN",
-            >= LogLevel.Error => "ERR",
-            >= LogLevel.Fatal => "FAT",
+            >= LogLevel.Debug => "DEBUG",
+            >= LogLevel.Info => "INFO",
+            >= LogLevel.Message => "MESSAGE",
+            >= LogLevel.Warning => "WARNING",
+            >= LogLevel.Error => "ERROR",
+            >= LogLevel.Fatal => "FATAL",
             _ => "???"
         };
     }
