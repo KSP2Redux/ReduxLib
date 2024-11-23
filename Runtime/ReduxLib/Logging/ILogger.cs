@@ -8,6 +8,8 @@ namespace ReduxLib.Logging;
 [PublicAPI]
 public interface ILogger
 {
+    public string Name { get; }
+
     /// <summary>
     /// Logs the given object with the given log level.
     /// </summary>

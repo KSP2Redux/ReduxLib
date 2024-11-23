@@ -11,7 +11,7 @@ namespace ReduxLib;
 // ReduxLib itself is a monobehaviour because it needs to be
 public class ReduxLib : MonoBehaviour
 {
-    public static GameObject Instance { get; private set; } = null!;
+    public static ReduxLib Instance { get; private set; } = null!;
 
 
     public const string REDUX_FOLDER = "Redux";
@@ -22,7 +22,8 @@ public class ReduxLib : MonoBehaviour
     private const string CONFIG_LOCATION_EDITOR = "./Assets/redux-config.json";
     private const string CONFIG_LOCATION_PLAYER = "./Redux/config.json";
 
-    private static FileLogProvider _reduxLogProvider;
+    
+    public static FileLogProvider ReduxLogProvider;
 
     internal static ILogger Logger;
 
@@ -50,28 +51,28 @@ public class ReduxLib : MonoBehaviour
         _logTimestampFormat = new(ReduxCoreConfig.Bind("Logging", "Timestamp Format", "MM/dd/yyyy HH:mm:ss",
             "The timestamp format for logs\n(in C#'s Datetime.ToString format)"));
         
-        _reduxLogProvider = new FileLogProvider(Application.isEditor ? LOG_LOCATION_EDITOR : LOG_LOCATION_PLAYER)
+        ReduxLogProvider = new FileLogProvider(Application.isEditor ? LOG_LOCATION_EDITOR : LOG_LOCATION_PLAYER)
             {
                 CurrentFilterLevel = _filterLogLevel.Value,
                 MirrorToUnityLog = _mirrorLogsToUnity.Value,
                 TimestampFormat = _logTimestampFormat.Value
             };
 
-        _filterLogLevel.RegisterCallback((_, to) => _reduxLogProvider.CurrentFilterLevel = to);
-        _mirrorLogsToUnity.RegisterCallback((_, to) => _reduxLogProvider.MirrorToUnityLog = to);
-        _logTimestampFormat.RegisterCallback((_, to) => _reduxLogProvider.TimestampFormat = to);
-        Logger = _reduxLogProvider.GetLogger("Redux Lib");
+        _filterLogLevel.RegisterCallback((_, to) => ReduxLogProvider.CurrentFilterLevel = to);
+        _mirrorLogsToUnity.RegisterCallback((_, to) => ReduxLogProvider.MirrorToUnityLog = to);
+        _logTimestampFormat.RegisterCallback((_, to) => ReduxLogProvider.TimestampFormat = to);
+        Logger = ReduxLogProvider.GetLogger("Redux Lib");
         Logger.LogInfo("Redux Lib Pre Initialized!");
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     public static void InitializeReduxLib()
     {
-        Instance = new GameObject("Redux Manager")
+        var instance = new GameObject("Redux Manager")
         {
             tag = "Game Manager",
         };
-        Instance.AddComponent<ReduxLib>();
+        Instance = instance.AddComponent<ReduxLib>();
         DontDestroyOnLoad(Instance);
         Logger.LogInfo("Redux Lib Initialized, calling callbacks!");
         if (OnReduxLibInitialized != null)
@@ -94,7 +95,7 @@ public class ReduxLib : MonoBehaviour
 
     public static ILogger GetLogger(string name)
     {
-        return _reduxLogProvider.GetLogger(name);
+        return ReduxLogProvider.GetLogger(name);
     }
     
     public static GameObject GetAlwaysLoadedObject(string name)
@@ -109,6 +110,6 @@ public class ReduxLib : MonoBehaviour
 
     public void Update()
     {
-        _reduxLogProvider.FlushLogs();
+        ReduxLogProvider.FlushLogs();
     }
 }

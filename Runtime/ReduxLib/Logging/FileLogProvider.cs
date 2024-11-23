@@ -16,6 +16,7 @@ public class FileLogProvider : ILogProvider
     public bool MirrorToUnityLog = true;
     public string TimestampFormat = "MM/dd/yyyy HH:mm:ss";
 
+    public event Action<LogLevel, ILogger, object>? OnLog;
     private string _file;
     private StringBuilder _cachedSb = new();
     
@@ -46,30 +47,33 @@ public class FileLogProvider : ILogProvider
 
     public ILogger GetLogger(string name) => new FileLogger(name, this);
 
-    private readonly ConcurrentQueue<string> _synchronizedLogs = new();
+    private readonly ConcurrentQueue<(LogLevel, ILogger, object)> _synchronizedLogs = new();
 
-    internal void WriteLog(string name, LogLevel level, object message)
+    internal void WriteLog(ILogger source, LogLevel level, object message)
     {
         if (level > CurrentFilterLevel) return;
-        var now = DateTime.Now;
-        var fullMessage = $"[{now.ToString(TimestampFormat)}] [{level.AsString()} : {name}] {message}";
-        if (MirrorToUnityLog)
-        {
-            Debug.unityLogger.Log(level.AsLogType(),fullMessage);
-        }
-        _synchronizedLogs.Enqueue(fullMessage);
+        _synchronizedLogs.Enqueue((level,source,message));
+        OnLog?.Invoke(level, source, message);
     }
     
     // This should be done every frame, by some update cycle
     internal void FlushLogs()
     {
         if (_synchronizedLogs.IsEmpty) return;
+        var now = DateTime.Now;
         // TODO: Figure out how to constantly have a log file open?
         
         _cachedSb.Clear();
         while (_synchronizedLogs.TryDequeue(out var nextMessage))
         {
-            _cachedSb.AppendLine(nextMessage);
+            var line =
+                $"[{now.ToString(TimestampFormat)}] [{nextMessage.Item1.AsString()} : {nextMessage.Item2.Name}] {nextMessage.Item3}";
+            _cachedSb.AppendLine(line);
+            
+            if (MirrorToUnityLog)
+            {
+                Debug.unityLogger.Log(nextMessage.Item1.AsLogType(), line);
+            }
         }
         
         File.AppendAllText(_file, _cachedSb.ToString());

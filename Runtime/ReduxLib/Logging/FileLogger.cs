@@ -11,7 +11,8 @@ internal class FileLogger : ILogger
         _provider = provider;
     }
 
-    public void Log(LogLevel level, object x) => _provider.WriteLog(_name, level, x);
+    public string Name => _name;
+    public void Log(LogLevel level, object x) => _provider.WriteLog(this, level, x);
     
     public void LogFatal(object x) => Log(LogLevel.Fatal, x);
 
