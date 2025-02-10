@@ -22,7 +22,6 @@ public class ReduxLib : MonoBehaviour
     private const string CONFIG_LOCATION_EDITOR = "./Assets/redux-config.json";
     private const string CONFIG_LOCATION_PLAYER = "./Redux/config.json";
 
-    
     public static FileLogProvider ReduxLogProvider;
 
     internal static ILogger Logger;
@@ -35,11 +34,11 @@ public class ReduxLib : MonoBehaviour
 
     public static IConfigFile ReduxCoreConfig;
 
-
     private static ConfigValue<LogLevel> _filterLogLevel;
     private static ConfigValue<bool> _mirrorLogsToUnity;
     private static ConfigValue<string> _logTimestampFormat;
-    
+    private static ConfigValue<bool> _usePhysicsAutosync;
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
     public static void PreInitializeReduxLib()
     {
@@ -50,17 +49,21 @@ public class ReduxLib : MonoBehaviour
             "Mirror redux logs to unity's debug output?"));
         _logTimestampFormat = new(ReduxCoreConfig.Bind("Logging", "Timestamp Format", "MM/dd/yyyy HH:mm:ss",
             "The timestamp format for logs\n(in C#'s Datetime.ToString format)"));
-        
+        _usePhysicsAutosync = new(ReduxCoreConfig.Bind("Advanced", "Use Unity physics auto sync", false,
+            "Enable Unity's Physics.autoSyncTransforms (slower) option for troubleshooting purposes. Please file a bug report if enabling this fixes a physics issue."));
+
         ReduxLogProvider = new FileLogProvider(Application.isEditor ? LOG_LOCATION_EDITOR : LOG_LOCATION_PLAYER)
             {
                 CurrentFilterLevel = _filterLogLevel.Value,
                 MirrorToUnityLog = _mirrorLogsToUnity.Value,
                 TimestampFormat = _logTimestampFormat.Value
             };
+        Physics.autoSyncTransforms = _usePhysicsAutosync.Value;
 
         _filterLogLevel.RegisterCallback((_, to) => ReduxLogProvider.CurrentFilterLevel = to);
         _mirrorLogsToUnity.RegisterCallback((_, to) => ReduxLogProvider.MirrorToUnityLog = to);
         _logTimestampFormat.RegisterCallback((_, to) => ReduxLogProvider.TimestampFormat = to);
+        _usePhysicsAutosync.RegisterCallback((_, to) => Physics.autoSyncTransforms = to);
         Logger = ReduxLogProvider.GetLogger("Redux Lib");
         Logger.LogInfo("Redux Lib Pre Initialized!");
     }
@@ -97,7 +100,7 @@ public class ReduxLib : MonoBehaviour
     {
         return ReduxLogProvider.GetLogger(name);
     }
-    
+
     public static GameObject GetAlwaysLoadedObject(string name)
     {
         var result = new GameObject(name)
