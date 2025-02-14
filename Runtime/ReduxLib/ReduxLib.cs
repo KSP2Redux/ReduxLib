@@ -16,11 +16,9 @@ public class ReduxLib : MonoBehaviour
 
     public const string REDUX_FOLDER = "Redux";
 
-    private const string LOG_LOCATION_EDITOR = "./Assets/redux.log";
-    private const string LOG_LOCATION_PLAYER = "./redux.log";
+    private const string LOG_LOCATION = "./redux.log";
 
-    private const string CONFIG_LOCATION_EDITOR = "./Assets/redux-config.json";
-    private const string CONFIG_LOCATION_PLAYER = "./Redux/config.json";
+    private const string CONFIG_LOCATION = "./Redux/config.json";
 
     public static FileLogProvider ReduxLogProvider;
 
@@ -42,7 +40,7 @@ public class ReduxLib : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
     public static void PreInitializeReduxLib()
     {
-        ReduxCoreConfig = new JsonConfigFile(Application.isEditor ? CONFIG_LOCATION_EDITOR : CONFIG_LOCATION_PLAYER);
+        ReduxCoreConfig = new JsonConfigFile(CONFIG_LOCATION);
         _filterLogLevel =
             new(ReduxCoreConfig.Bind("Logging", "Filter Level", LogLevel.Info, "The current log level filter"));
         _mirrorLogsToUnity = new(ReduxCoreConfig.Bind("Logging", "Mirror Logs to Unity", false,
@@ -52,7 +50,7 @@ public class ReduxLib : MonoBehaviour
         _usePhysicsAutosync = new(ReduxCoreConfig.Bind("Advanced", "Use Unity physics auto sync", false,
             "Enable Unity's Physics.autoSyncTransforms (slower) option for troubleshooting purposes. Please file a bug report if enabling this fixes a physics issue."));
 
-        ReduxLogProvider = new FileLogProvider(Application.isEditor ? LOG_LOCATION_EDITOR : LOG_LOCATION_PLAYER)
+        ReduxLogProvider = new FileLogProvider(LOG_LOCATION)
             {
                 CurrentFilterLevel = _filterLogLevel.Value,
                 MirrorToUnityLog = _mirrorLogsToUnity.Value,
