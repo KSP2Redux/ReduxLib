@@ -12,5 +12,6 @@ public interface IInputManager
 
     public void RestoreUitkInputLocks();
 
-    public void BindHideAction(Action onHide);
+    public void BindHideAction(Action<bool> onHide);
+    public void UnbindHideAction(Action<bool> onHide);
 }
