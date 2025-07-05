@@ -136,6 +136,8 @@ public class JsonConfigFile : IConfigFile
             }
         }
 
+        result.AppendLine($"        // Default: {entry.Value.Default}");
+
         var serialized = JsonConvert.SerializeObject(entry.Value.Value,Formatting.Indented,DefaultConverters.ToArray());
         var serializedLines = serialized.Split('\n').Select(x => x.TrimEnd()).ToArray();
         if (serializedLines.Length > 1)

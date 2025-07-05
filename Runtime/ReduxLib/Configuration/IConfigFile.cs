@@ -43,4 +43,15 @@ public interface IConfigFile
     /// </summary>
     /// <param name="section"></param>
     public IReadOnlyList<string> this[string section] { get; }
+
+    public void Reset()
+    {
+        foreach (var section in Sections)
+        {
+            foreach (var config in this[section])
+            {
+                this[section, config].Value = this[section, config].Default;
+            }
+        }
+    }
 }

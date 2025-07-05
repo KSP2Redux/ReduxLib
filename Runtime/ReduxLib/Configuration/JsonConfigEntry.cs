@@ -35,6 +35,7 @@ public class JsonConfigEntry : IConfigEntry
     {
         _configFile = configFile;
         _value = value;
+        Default = value;
         Constraint = constraint;
         Description = description;
         ValueType = type;
@@ -51,6 +52,8 @@ public class JsonConfigEntry : IConfigEntry
             _configFile.Save();
         }
     }
+
+    public object Default { get; }
 
     /// <inheritdoc />
     public Type ValueType { get; }

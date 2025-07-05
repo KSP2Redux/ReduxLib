@@ -13,6 +13,11 @@ public interface IConfigEntry
     /// The value of the config entry
     /// </summary>
     public object Value { get; set; }
+    
+    /// <summary>
+    /// The default value of the config entry
+    /// </summary>
+    public object Default { get; }
 
     /// <summary>
     /// The type of the value of the config entry
