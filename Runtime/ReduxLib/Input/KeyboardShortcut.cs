@@ -64,7 +64,7 @@ public struct KeyboardShortcut
         Main = KeyCode.None;
         Enum.TryParse(split[^1], out Main);
 
-        for (var i = 1; i < split.Length - 1; i++)
+        for (var i = 0; i < split.Length - 1; i++)
         {
             Modifiers[i] = KeyCode.None;
             Enum.TryParse(split[i], out Modifiers[i]);
