@@ -7,7 +7,7 @@ namespace ReduxLib.Input;
 
 
 [JsonConverter(typeof(KeyboardShortcutConverter))]
-public class KeyboardShortcut
+public struct KeyboardShortcut
 {
     public KeyCode[] Modifiers;
     public KeyCode Main;

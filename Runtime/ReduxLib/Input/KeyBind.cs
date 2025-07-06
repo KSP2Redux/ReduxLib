@@ -6,7 +6,7 @@ using UnityEngine;
 namespace ReduxLib.Input;
 
 [JsonConverter(typeof(KeyBindConverter)),PublicAPI]
-public class KeyBind
+public struct KeyBind
 {
     public KeyCode Code;
 
