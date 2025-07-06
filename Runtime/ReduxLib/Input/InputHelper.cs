@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace ReduxLib.Input;
@@ -112,7 +113,7 @@ public static class InputHelper
                 {
                     Cancel();
                 }
-                else
+                else if (!Modifiers.Contains(keyCode))
                 {
                     Finish(new (keyCode, GetModifiers()));
                 }
