@@ -86,11 +86,11 @@ public class JsonConfigFile : IConfigFile
     {
         var method = Assembly.Load("Newtonsoft.Json.UnityConverters")
             .GetType("Newtonsoft.Json.UnityConverters.UnityConverterInitializer")
-            .GetMethod("CreateConverters", BindingFlags.Static | BindingFlags.NonPublic)!;
+            .GetMethod("CreateConverters", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
         var parameters = new object[] { ScriptableObject.CreateInstance<UnityConvertersConfig>() };
         return (List<JsonConverter>)method.Invoke(null, parameters);
     }
-    
+
     /// <summary>
     /// The default converters to use when serializing/deserializing JSON.
     /// </summary>
@@ -205,8 +205,8 @@ public class JsonConfigFile : IConfigFile
         {
             previousSection[key] = new JsonConfigEntry(this, typeof(T), description, defaultValue,constraint);
         }
-        
-        
+
+
 
         Save();
         return previousSection[key];
