@@ -47,8 +47,9 @@ public class JsonConfigEntry : IConfigEntry
         get => _value;
         set
         {
-            Callbacks?.Invoke(_value, value);
+            object oldValue = _value;
             _value = value;
+            Callbacks?.Invoke(oldValue, _value);
             _configFile.Save();
         }
     }
