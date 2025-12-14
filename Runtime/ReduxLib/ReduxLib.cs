@@ -37,7 +37,15 @@ public class ReduxLib : MonoBehaviour
     private static ConfigValue<string> _logTimestampFormat;
     private static ConfigValue<bool> _usePhysicsAutosync;
     private static ConfigValue<bool> _inputDamping;
+
+    private static ConfigValue<float> _inputDampingSensitivityDefault;
+    private static ConfigValue<float> _inputDampingSensitivityPrecise;
+    private static ConfigValue<float> _inputDampingReturnSpeed;
     public static bool InputDamping => _inputDamping.Value;
+    public static float InputDampingSensitivityDefault => _inputDampingSensitivityDefault.Value;
+    public static float InputDampingSensitivityPrecise => _inputDampingSensitivityPrecise.Value;
+    public static float InputDampingReturnSpeed => _inputDampingReturnSpeed.Value;
+    
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
     public static void PreInitializeReduxLib()
@@ -53,7 +61,17 @@ public class ReduxLib : MonoBehaviour
             "Enable Unity's Physics.autoSyncTransforms (slower) option for troubleshooting purposes. Please file a bug report if enabling this fixes a physics issue."));
         _inputDamping = new(ReduxCoreConfig.Bind("Input", "Input Damping", true,
             "Enable input damping for pitch/yaw/roll/steer controls"));
-
+        _inputDampingSensitivityDefault = new(ReduxCoreConfig.Bind("Input",
+            "Input Damping Sensitivity", 10f,
+            "The input damping sensitivity when not in precision control mode\nIs the inverse of how many seconds it takes to go from 0 to 100% authority",
+            new ListConstraint<float>(2f, 20f)));
+        _inputDampingSensitivityPrecise = new(ReduxCoreConfig.Bind("Input", "Input Damping Sensitivity (Precise)", 3f,
+            "The input damping sensitivity when in precision control mode\nIs the inverse of how many seconds it takes to go from 0 to 100% authority",new ListConstraint<float>(0.5f, 10f)));
+        _inputDampingReturnSpeed = new(ReduxCoreConfig.Bind("Input", "Input Damping Return Speed", 8f,
+            "The input damping return speed\nInverse of how many seconds it takes to reset to 0% authority from 100%",
+            new ListConstraint<float>(6f, 30f)));
+        
+        
         ReduxLogProvider = new FileLogProvider(LOG_LOCATION)
             {
                 CurrentFilterLevel = _filterLogLevel.Value,
