@@ -36,6 +36,8 @@ public class ReduxLib : MonoBehaviour
     private static ConfigValue<bool> _mirrorLogsToUnity;
     private static ConfigValue<string> _logTimestampFormat;
     private static ConfigValue<bool> _usePhysicsAutosync;
+    private static ConfigValue<bool> _inputDamping;
+    public static bool InputDamping => _inputDamping.Value;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
     public static void PreInitializeReduxLib()
@@ -49,6 +51,8 @@ public class ReduxLib : MonoBehaviour
             "The timestamp format for logs\n(in C#'s Datetime.ToString format)"));
         _usePhysicsAutosync = new(ReduxCoreConfig.Bind("Advanced", "Use Unity physics auto sync", false,
             "Enable Unity's Physics.autoSyncTransforms (slower) option for troubleshooting purposes. Please file a bug report if enabling this fixes a physics issue."));
+        _inputDamping = new(ReduxCoreConfig.Bind("Input", "Input Damping", true,
+            "Enable input damping for pitch/yaw/roll/steer controls"));
 
         ReduxLogProvider = new FileLogProvider(LOG_LOCATION)
             {
