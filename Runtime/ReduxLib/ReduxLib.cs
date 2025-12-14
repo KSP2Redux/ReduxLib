@@ -64,12 +64,12 @@ public class ReduxLib : MonoBehaviour
         _inputDampingSensitivityDefault = new(ReduxCoreConfig.Bind("Input",
             "Input Damping Sensitivity", 10f,
             "The input damping sensitivity when not in precision control mode\nIs the inverse of how many seconds it takes to go from 0 to 100% authority",
-            new ListConstraint<float>(2f, 20f)));
+            new RangeConstraint<float>(2f, 20f)));
         _inputDampingSensitivityPrecise = new(ReduxCoreConfig.Bind("Input", "Input Damping Sensitivity (Precise)", 3f,
-            "The input damping sensitivity when in precision control mode\nIs the inverse of how many seconds it takes to go from 0 to 100% authority",new ListConstraint<float>(0.5f, 10f)));
+            "The input damping sensitivity when in precision control mode\nIs the inverse of how many seconds it takes to go from 0 to 100% authority",new RangeConstraint<float>(0.5f, 10f)));
         _inputDampingReturnSpeed = new(ReduxCoreConfig.Bind("Input", "Input Damping Return Speed", 8f,
             "The input damping return speed\nInverse of how many seconds it takes to reset to 0% authority from 100%",
-            new ListConstraint<float>(6f, 30f)));
+            new RangeConstraint<float>(6f, 30f)));
         
         
         ReduxLogProvider = new FileLogProvider(LOG_LOCATION)
