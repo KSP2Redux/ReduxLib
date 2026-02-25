@@ -2,11 +2,9 @@
 using ReduxLib.Configuration;
 using ReduxLib.Logging;
 using UnityEngine;
-using UnityEngine.UIElements;
 using ILogger = ReduxLib.Logging.ILogger;
 
 namespace ReduxLib;
-
 
 // ReduxLib itself is a monobehaviour because it needs to be
 public class ReduxLib : MonoBehaviour
@@ -16,16 +14,14 @@ public class ReduxLib : MonoBehaviour
 
     public const string REDUX_FOLDER = "Redux";
 
-    private const string LOG_LOCATION = "./redux.log";
-
     private const string CONFIG_LOCATION = "./Redux/config.json";
 
-    public static FileLogProvider ReduxLogProvider;
+    public static ILogProvider ReduxLogProvider;
 
     internal static ILogger Logger;
 
     /*
-     * The following are going to be used for setting up the global configuration, and setting up loggers
+     * The following are going to be used for setting up the global configuration and setting up loggers
      */
 
     public static event Action? OnReduxLibInitialized;
@@ -33,56 +29,72 @@ public class ReduxLib : MonoBehaviour
     public static IConfigFile ReduxCoreConfig;
 
     private static ConfigValue<LogLevel> _filterLogLevel;
-    private static ConfigValue<bool> _mirrorLogsToUnity;
     private static ConfigValue<string> _logTimestampFormat;
-    private static ConfigValue<bool> _usePhysicsAutosync;
-    private static ConfigValue<bool> _inputDamping;
 
+    private static ConfigValue<bool> _usePhysicsAutosync;
+
+    private static ConfigValue<bool> _inputDamping;
     private static ConfigValue<float> _inputDampingSensitivityDefault;
     private static ConfigValue<float> _inputDampingSensitivityPrecise;
     private static ConfigValue<float> _inputDampingReturnSpeed;
+
+    public static string TimestampFormat => _logTimestampFormat.Value;
+
     public static bool InputDamping => _inputDamping.Value;
     public static float InputDampingSensitivityDefault => _inputDampingSensitivityDefault.Value;
     public static float InputDampingSensitivityPrecise => _inputDampingSensitivityPrecise.Value;
     public static float InputDampingReturnSpeed => _inputDampingReturnSpeed.Value;
-    
+
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
     public static void PreInitializeReduxLib()
     {
         ReduxCoreConfig = new JsonConfigFile(CONFIG_LOCATION);
         _filterLogLevel =
-            new(ReduxCoreConfig.Bind("Logging", "Filter Level", LogLevel.Info, "The current log level filter"));
-        _mirrorLogsToUnity = new(ReduxCoreConfig.Bind("Logging", "Mirror Logs to Unity", false,
-            "Mirror redux logs to unity's debug output?"));
-        _logTimestampFormat = new(ReduxCoreConfig.Bind("Logging", "Timestamp Format", "MM/dd/yyyy HH:mm:ss",
-            "The timestamp format for logs\n(in C#'s Datetime.ToString format)"));
-        _usePhysicsAutosync = new(ReduxCoreConfig.Bind("Advanced", "Use Unity physics auto sync", false,
-            "Enable Unity's Physics.autoSyncTransforms (slower) option for troubleshooting purposes. Please file a bug report if enabling this fixes a physics issue."));
-        _inputDamping = new(ReduxCoreConfig.Bind("Input", "Input Damping", true,
-            "Enable input damping for pitch/yaw/roll/steer controls"));
-        _inputDampingSensitivityDefault = new(ReduxCoreConfig.Bind("Input",
-            "Input Damping Sensitivity", 10f,
-            "The input damping sensitivity when not in precision control mode\nIs the inverse of how many seconds it takes to go from 0 to 100% authority",
-            new RangeConstraint<float>(2f, 20f)));
-        _inputDampingSensitivityPrecise = new(ReduxCoreConfig.Bind("Input", "Input Damping Sensitivity (Precise)", 3f,
-            "The input damping sensitivity when in precision control mode\nIs the inverse of how many seconds it takes to go from 0 to 100% authority",new RangeConstraint<float>(0.5f, 10f)));
-        _inputDampingReturnSpeed = new(ReduxCoreConfig.Bind("Input", "Input Damping Return Speed", 8f,
-            "The input damping return speed\nInverse of how many seconds it takes to reset to 0% authority from 100%",
-            new RangeConstraint<float>(6f, 30f)));
-        
-        
-        ReduxLogProvider = new FileLogProvider(LOG_LOCATION)
-            {
-                CurrentFilterLevel = _filterLogLevel.Value,
-                MirrorToUnityLog = _mirrorLogsToUnity.Value,
-                TimestampFormat = _logTimestampFormat.Value
-            };
+            new ConfigValue<LogLevel>(
+                ReduxCoreConfig.Bind(
+                    "Logging",
+                    "Filter Level",
+                    LogLevel.Info,
+                    "The current log level filter"
+                )
+            );
+        _logTimestampFormat = new ConfigValue<string>(
+            ReduxCoreConfig.Bind(
+                "Logging",
+                "Timestamp Format",
+                "HH:mm:ss.fff",
+                "The timestamp format for logs\n(in C#'s Datetime.ToString format)"
+            )
+        );
+        _usePhysicsAutosync = new ConfigValue<bool>(
+            ReduxCoreConfig.Bind(
+                "Advanced",
+                "Use Unity physics auto sync",
+                false,
+                "Enable Unity's Physics.autoSyncTransforms (slower) option for troubleshooting purposes. Please file a bug report if enabling this fixes a physics issue."
+            )
+        );
+        // _inputDamping = new(ReduxCoreConfig.Bind("Input", "Input Damping", true,
+        //     "Enable input damping for pitch/yaw/roll/steer controls"));
+        // _inputDampingSensitivityDefault = new(ReduxCoreConfig.Bind("Input",
+        //     "Input Damping Sensitivity", 10f,
+        //     "The input damping sensitivity when not in precision control mode\nIs the inverse of how many seconds it takes to go from 0 to 100% authority",
+        //     new RangeConstraint<float>(2f, 20f)));
+        // _inputDampingSensitivityPrecise = new(ReduxCoreConfig.Bind("Input", "Input Damping Sensitivity (Precise)", 3f,
+        //     "The input damping sensitivity when in precision control mode\nIs the inverse of how many seconds it takes to go from 0 to 100% authority",new RangeConstraint<float>(0.5f, 10f)));
+        // _inputDampingReturnSpeed = new(ReduxCoreConfig.Bind("Input", "Input Damping Return Speed", 8f,
+        //     "The input damping return speed\nInverse of how many seconds it takes to reset to 0% authority from 100%",
+        //     new RangeConstraint<float>(6f, 30f)));
+
+
+        ReduxLogProvider = new UnityLogProvider
+        {
+            CurrentFilterLevel = _filterLogLevel.Value,
+        };
         Physics.autoSyncTransforms = _usePhysicsAutosync.Value;
 
         _filterLogLevel.RegisterCallback((_, to) => ReduxLogProvider.CurrentFilterLevel = to);
-        _mirrorLogsToUnity.RegisterCallback((_, to) => ReduxLogProvider.MirrorToUnityLog = to);
-        _logTimestampFormat.RegisterCallback((_, to) => ReduxLogProvider.TimestampFormat = to);
         _usePhysicsAutosync.RegisterCallback((_, to) => Physics.autoSyncTransforms = to);
         Logger = ReduxLogProvider.GetLogger("Redux Lib");
         Logger.LogInfo("Redux Lib Pre Initialized!");
@@ -101,7 +113,7 @@ public class ReduxLib : MonoBehaviour
         if (OnReduxLibInitialized != null)
         {
             // Do this manually so even if an error happens, later ones aren't affected
-            foreach (var del in OnReduxLibInitialized.GetInvocationList())
+            foreach (Delegate? del in OnReduxLibInitialized.GetInvocationList())
             {
                 try
                 {
@@ -113,6 +125,7 @@ public class ReduxLib : MonoBehaviour
                 }
             }
         }
+
         Logger.LogInfo("Redux Lib callbacks complete!");
     }
 
@@ -133,6 +146,9 @@ public class ReduxLib : MonoBehaviour
 
     public void Update()
     {
-        ReduxLogProvider.FlushLogs();
+        if (ReduxLogProvider is IUpdatableLogProvider updatable)
+        {
+            updatable.Update();
+        }
     }
 }
