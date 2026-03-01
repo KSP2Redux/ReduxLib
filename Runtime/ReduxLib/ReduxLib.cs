@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using ReduxLib.Configuration;
 using ReduxLib.Logging;
 using UnityEngine;
@@ -49,6 +50,10 @@ public class ReduxLib : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
     public static void PreInitializeReduxLib()
     {
+        if (!Directory.Exists("./Redux/Config"))
+        {
+            Directory.CreateDirectory("./Redux/Config");
+        }
         ReduxCoreConfig = new JsonConfigFile(CONFIG_LOCATION);
         _filterLogLevel =
             new ConfigValue<LogLevel>(
@@ -75,17 +80,6 @@ public class ReduxLib : MonoBehaviour
                 "Enable Unity's Physics.autoSyncTransforms (slower) option for troubleshooting purposes. Please file a bug report if enabling this fixes a physics issue."
             )
         );
-        // _inputDamping = new(ReduxCoreConfig.Bind("Input", "Input Damping", true,
-        //     "Enable input damping for pitch/yaw/roll/steer controls"));
-        // _inputDampingSensitivityDefault = new(ReduxCoreConfig.Bind("Input",
-        //     "Input Damping Sensitivity", 10f,
-        //     "The input damping sensitivity when not in precision control mode\nIs the inverse of how many seconds it takes to go from 0 to 100% authority",
-        //     new RangeConstraint<float>(2f, 20f)));
-        // _inputDampingSensitivityPrecise = new(ReduxCoreConfig.Bind("Input", "Input Damping Sensitivity (Precise)", 3f,
-        //     "The input damping sensitivity when in precision control mode\nIs the inverse of how many seconds it takes to go from 0 to 100% authority",new RangeConstraint<float>(0.5f, 10f)));
-        // _inputDampingReturnSpeed = new(ReduxCoreConfig.Bind("Input", "Input Damping Return Speed", 8f,
-        //     "The input damping return speed\nInverse of how many seconds it takes to reset to 0% authority from 100%",
-        //     new RangeConstraint<float>(6f, 30f)));
 
 
         ReduxLogProvider = new UnityLogProvider
