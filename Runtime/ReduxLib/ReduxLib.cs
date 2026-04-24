@@ -10,13 +10,14 @@ namespace ReduxLib;
 // ReduxLib itself is a monobehaviour because it needs to be
 public class ReduxLib : MonoBehaviour
 {
-    public static ReduxLib Instance { get; private set; } = null!;
-
-
     public const string REDUX_FOLDER = "Redux";
-
     private const string CONFIG_LOCATION = "./Redux/config.json";
 
+    private const string LOGGING_CONFIG_SECTION = "Logging";
+    private const string FLIGHT_INPUT_CONFIG_SECTION = "Flight Input";
+    private const string ADVANCED_CONFIG_SECTION = "Advanced";
+
+    public static ReduxLib Instance { get; private set; } = null!;
     public static ILogProvider ReduxLogProvider;
 
     internal static ILogger Logger;
@@ -34,17 +35,17 @@ public class ReduxLib : MonoBehaviour
 
     private static ConfigValue<bool> _usePhysicsAutosync;
 
-    private static ConfigValue<bool> _inputDamping;
-    private static ConfigValue<float> _inputDampingSensitivityDefault;
-    private static ConfigValue<float> _inputDampingSensitivityPrecise;
-    private static ConfigValue<float> _inputDampingReturnSpeed;
+    private static ConfigValue<float> _flightInputNormalSensitivity;
+    private static ConfigValue<float> _flightInputNormalGravity;
+    private static ConfigValue<float> _flightInputPrecisionRate;
+    private static ConfigValue<float> _flightInputPrecisionGravity;
 
     public static string TimestampFormat => _logTimestampFormat.Value;
 
-    public static bool InputDamping => _inputDamping.Value;
-    public static float InputDampingSensitivityDefault => _inputDampingSensitivityDefault.Value;
-    public static float InputDampingSensitivityPrecise => _inputDampingSensitivityPrecise.Value;
-    public static float InputDampingReturnSpeed => _inputDampingReturnSpeed.Value;
+    public static float FlightInputNormalSensitivity => _flightInputNormalSensitivity.Value;
+    public static float FlightInputNormalGravity => _flightInputNormalGravity.Value;
+    public static float FlightInputPrecisionRate => _flightInputPrecisionRate.Value;
+    public static float FlightInputPrecisionGravity => _flightInputPrecisionGravity.Value;
 
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
@@ -58,7 +59,7 @@ public class ReduxLib : MonoBehaviour
         _filterLogLevel =
             new ConfigValue<LogLevel>(
                 ReduxCoreConfig.Bind(
-                    "Logging",
+                    LOGGING_CONFIG_SECTION,
                     "Filter Level",
                     LogLevel.Info,
                     "The current log level filter"
@@ -66,7 +67,7 @@ public class ReduxLib : MonoBehaviour
             );
         _logTimestampFormat = new ConfigValue<string>(
             ReduxCoreConfig.Bind(
-                "Logging",
+                LOGGING_CONFIG_SECTION,
                 "Timestamp Format",
                 "HH:mm:ss.fff",
                 "The timestamp format for logs\n(in C#'s Datetime.ToString format)"
@@ -74,10 +75,46 @@ public class ReduxLib : MonoBehaviour
         );
         _usePhysicsAutosync = new ConfigValue<bool>(
             ReduxCoreConfig.Bind(
-                "Advanced",
+                ADVANCED_CONFIG_SECTION,
                 "Use Unity physics auto sync",
                 false,
                 "Enable Unity's Physics.autoSyncTransforms (slower) option for troubleshooting purposes. Please file a bug report if enabling this fixes a physics issue."
+            )
+        );
+        _flightInputNormalSensitivity = new ConfigValue<float>(
+            ReduxCoreConfig.Bind(
+                FLIGHT_INPUT_CONFIG_SECTION,
+                "Normal Sensitivity",
+                8f,
+                "Units per second to ramp keyboard pitch, yaw, and roll input toward +/-1 while held.",
+                new RangeConstraint<float>(0f, 20f, 400)
+            )
+        );
+        _flightInputNormalGravity = new ConfigValue<float>(
+            ReduxCoreConfig.Bind(
+                FLIGHT_INPUT_CONFIG_SECTION,
+                "Normal Decay",
+                8f,
+                "Units per second to return keyboard pitch, yaw, and roll input toward 0 after release.",
+                new RangeConstraint<float>(0f, 20f, 400)
+            )
+        );
+        _flightInputPrecisionRate = new ConfigValue<float>(
+            ReduxCoreConfig.Bind(
+                FLIGHT_INPUT_CONFIG_SECTION,
+                "Precision Rate",
+                0.4f,
+                "Units per second to accumulate pitch, yaw, and roll input while precision mode keys are held.",
+                new RangeConstraint<float>(0f, 5f, 500)
+            )
+        );
+        _flightInputPrecisionGravity = new ConfigValue<float>(
+            ReduxCoreConfig.Bind(
+                FLIGHT_INPUT_CONFIG_SECTION,
+                "Precision Decay",
+                1f,
+                "Units per second to return accumulated precision mode pitch, yaw, and roll input toward 0.",
+                new RangeConstraint<float>(0f, 5f, 500)
             )
         );
 
