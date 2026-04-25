@@ -16,6 +16,7 @@ public class ReduxLib : MonoBehaviour
     private const string LOGGING_CONFIG_SECTION = "Logging";
     private const string FLIGHT_INPUT_CONFIG_SECTION = "Flight Input";
     private const string ADVANCED_CONFIG_SECTION = "Advanced";
+    private const string STARTUP_CONFIG_SECTION = "Startup";
 
     public static ReduxLib Instance { get; private set; } = null!;
     public static ILogProvider ReduxLogProvider;
@@ -34,6 +35,7 @@ public class ReduxLib : MonoBehaviour
     private static ConfigValue<string> _logTimestampFormat;
 
     private static ConfigValue<bool> _usePhysicsAutosync;
+    private static ConfigValue<bool> _disablePhotosensitivityWarning;
 
     private static ConfigValue<float> _flightInputNormalSensitivity;
     private static ConfigValue<float> _flightInputNormalGravity;
@@ -41,6 +43,7 @@ public class ReduxLib : MonoBehaviour
     private static ConfigValue<float> _flightInputPrecisionGravity;
 
     public static string TimestampFormat => _logTimestampFormat.Value;
+    public static bool DisablePhotosensitivityWarning => _disablePhotosensitivityWarning.Value;
 
     public static float FlightInputNormalSensitivity => _flightInputNormalSensitivity.Value;
     public static float FlightInputNormalGravity => _flightInputNormalGravity.Value;
@@ -79,6 +82,14 @@ public class ReduxLib : MonoBehaviour
                 "Use Unity physics auto sync",
                 false,
                 "Enable Unity's Physics.autoSyncTransforms (slower) option for troubleshooting purposes. Please file a bug report if enabling this fixes a physics issue."
+            )
+        );
+        _disablePhotosensitivityWarning = new ConfigValue<bool>(
+            ReduxCoreConfig.Bind(
+                STARTUP_CONFIG_SECTION,
+                "Disable photosensitivity warning",
+                false,
+                "Skips the startup photosensitivity warning."
             )
         );
         _flightInputNormalSensitivity = new ConfigValue<float>(
