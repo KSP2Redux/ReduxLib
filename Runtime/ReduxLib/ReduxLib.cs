@@ -15,6 +15,9 @@ public class ReduxLib : MonoBehaviour
 
     private const string LOGGING_CONFIG_SECTION = "Logging";
     private const string FLIGHT_INPUT_CONFIG_SECTION = "Flight Input";
+#if INTERNAL
+    private const string THERMALS_CONFIG_SECTION = "Thermals";
+#endif
     private const string ADVANCED_CONFIG_SECTION = "Advanced";
     private const string STARTUP_CONFIG_SECTION = "Startup";
 
@@ -41,6 +44,9 @@ public class ReduxLib : MonoBehaviour
     private static ConfigValue<float> _flightInputNormalGravity;
     private static ConfigValue<float> _flightInputPrecisionRate;
     private static ConfigValue<float> _flightInputPrecisionGravity;
+#if INTERNAL
+    private static ConfigValue<double> _heatShieldAblationFluxExponent;
+#endif
 
     public static string TimestampFormat => _logTimestampFormat.Value;
     public static bool DisablePhotosensitivityWarning => _disablePhotosensitivityWarning.Value;
@@ -49,6 +55,11 @@ public class ReduxLib : MonoBehaviour
     public static float FlightInputNormalGravity => _flightInputNormalGravity.Value;
     public static float FlightInputPrecisionRate => _flightInputPrecisionRate.Value;
     public static float FlightInputPrecisionGravity => _flightInputPrecisionGravity.Value;
+#if INTERNAL
+    public static double HeatShieldAblationFluxExponent => _heatShieldAblationFluxExponent.Value;
+#else
+    public static double HeatShieldAblationFluxExponent => 0.5;
+#endif
 
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
@@ -128,6 +139,17 @@ public class ReduxLib : MonoBehaviour
                 new RangeConstraint<float>(0f, 5f, 500)
             )
         );
+#if INTERNAL
+        _heatShieldAblationFluxExponent = new ConfigValue<double>(
+            ReduxCoreConfig.Bind(
+                THERMALS_CONFIG_SECTION,
+                "Heat Shield Ablation Flux Exponent",
+                0.5,
+                "The main tuning value for how harshly heat shield ablation scales at high reentry flux.",
+                new RangeConstraint<double>(0.1, 1.0, 181, "{0:F3}")
+            )
+        );
+#endif
 
 
         ReduxLogProvider = new UnityLogProvider
