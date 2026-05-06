@@ -10,7 +10,7 @@ namespace ReduxLib.Configuration;
 /// </summary>
 public static class ConfigExtensions
 {
-    private const BindingFlags Flags = BindingFlags.Public | BindingFlags.Instance;
+    private const BindingFlags Flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
     private static object? GetMemberValue(this MemberInfo m, object instance) => m switch
     {

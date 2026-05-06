@@ -17,18 +17,30 @@ public class ConfigRangeAttribute : Attribute
     /// The upper bound on the range of values
     /// </summary>
     public object Max;
+    /// <summary>
+    /// The number of slider steps in the settings menu
+    /// </summary>
+    public int Steps;
+    /// <summary>
+    /// The format string used by the settings menu slider
+    /// </summary>
+    public string Format;
 
     /// <summary>
     /// Creates a new config range attribute with the given min and max
     /// </summary>
     /// <param name="min">The min</param>
     /// <param name="max">The max</param>
-    public ConfigRangeAttribute(object min, object max)
+    /// <param name="configSteps">The amount of steps on the slider in the settings menu</param>
+    /// <param name="configFormat">The format used to display the value on the slider</param>
+    public ConfigRangeAttribute(object min, object max, int configSteps = 1024, string configFormat = "{0:F2}")
     {
         Min = min;
         Max = max;
+        Steps = configSteps;
+        Format = configFormat;
     }
-    
+
     /// <summary>
     /// Converts this attribute to a range constraint of T
     /// </summary>
@@ -36,7 +48,7 @@ public class ConfigRangeAttribute : Attribute
     /// <returns>The range constraint</returns>
     public RangeConstraint<T> ToRangeConstraintTyped<T>() where T : IComparable<T>
     {
-        return new RangeConstraint<T>((T)Min, (T)Max);
+        return new RangeConstraint<T>((T)Min, (T)Max, Steps, Format);
     }
     
     private static readonly MethodInfo ToRangeConstraintMethodInfo = typeof(ConfigRangeAttribute).GetMethod(nameof(ToRangeConstraintTyped), BindingFlags.Instance | BindingFlags.Public)!;

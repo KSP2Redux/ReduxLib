@@ -1,25 +1,87 @@
 ﻿using System;
 using System.IO;
 using ReduxLib.Configuration;
+using ReduxLib.Configuration.Attributes;
 using ReduxLib.Logging;
 using UnityEngine;
 using ILogger = ReduxLib.Logging.ILogger;
 
 namespace ReduxLib;
 
+internal class ReduxLibConfig
+{
+    [ConfigSection("Logging", loc: "Menu/Settings/Sections/Logging")]
+    [ConfigValue("Filter Level",
+        "The current log level filter",
+        nameLoc: "Menu/Settings/FilterLevel",
+        descLoc: "Menu/Settings/Description/FilterLevel")]
+    public ConfigValue<LogLevel> FilterLogLevel = new ConfigDescription<LogLevel>(LogLevel.Info);
+
+    [ConfigValue("Timestamp Format",
+        "The timestamp format for logs\n(in C#'s Datetime.ToString format)",
+        nameLoc: "Menu/Settings/LogTimestampFormat",
+        descLoc: "Menu/Settings/Description/LogTimestampFormat")]
+    public string LogTimestampFormat = "HH:mm:ss.fff";
+
+    [ConfigSection("Advanced", loc: "Menu/Settings/Sections/Advanced")]
+    [ConfigValue("Use Unity physics auto sync",
+        "Enable Unity's Physics.autoSyncTransforms (slower) option for troubleshooting purposes. Please file a bug report if enabling this fixes a physics issue.",
+        nameLoc: "Menu/Settings/UseUnityPhysicsAutoSync",
+        descLoc: "Menu/Settings/Description/UseUnityPhysicsAutoSync")]
+    public ConfigValue<bool> UsePhysicsAutosync = new ConfigDescription<bool>(false);
+
+    [ConfigSection("Startup", loc: "Menu/Settings/Sections/Startup")]
+    [ConfigValue("Disable photosensitivity warning",
+        "Skips the startup photosensitivity warning.",
+        nameLoc: "Menu/Settings/DisablePhotosensitivityWarning",
+        descLoc: "Menu/Settings/Description/DisablePhotosensitivityWarning")]
+    public bool DisablePhotosensitivityWarning;
+
+    [ConfigSection("Flight Input", loc: "Menu/Settings/Sections/FlightInput")]
+    [ConfigValue("Normal Sensitivity",
+        "Units per second to ramp keyboard pitch, yaw, and roll input toward +/-1 while held.",
+        nameLoc: "Menu/Settings/NormalSensitivity",
+        descLoc: "Menu/Settings/Description/NormalSensitivity")]
+    [ConfigRange(0f, 20f, 400)]
+    public float FlightInputNormalSensitivity = 8f;
+
+    [ConfigValue("Normal Decay",
+        "Units per second to return keyboard pitch, yaw, and roll input toward 0 after release.",
+        nameLoc: "Menu/Settings/NormalDecay",
+        descLoc: "Menu/Settings/Description/NormalDecay")]
+    [ConfigRange(0f, 20f, 400)]
+    public float FlightInputNormalGravity = 8f;
+
+    [ConfigValue("Precision Rate",
+        "Units per second to accumulate pitch, yaw, and roll input while precision mode keys are held.",
+        nameLoc: "Menu/Settings/PrecisionRate",
+        descLoc: "Menu/Settings/Description/PrecisionRate")]
+    [ConfigRange(0f, 5f, 500)]
+    public float FlightInputPrecisionRate = 0.4f;
+
+    [ConfigValue("Precision Decay",
+        "Units per second to return accumulated precision mode pitch, yaw, and roll input toward 0.",
+        nameLoc: "Menu/Settings/PrecisionDecay",
+        descLoc: "Menu/Settings/Description/PrecisionDecay")]
+    [ConfigRange(0f, 5f, 500)]
+    public float FlightInputPrecisionGravity = 1f;
+
+#if INTERNAL
+    [ConfigSection("Thermals", loc: "Menu/Settings/Sections/Thermals")]
+    [ConfigValue("Heat Shield Ablation Flux Exponent",
+        "The main tuning value for how harshly heat shield ablation scales at high reentry flux.",
+        nameLoc: "Menu/Settings/HeatShieldAblationFluxExponent",
+        descLoc: "Menu/Settings/Description/HeatShieldAblationFluxExponent")]
+    [ConfigRange(0.1, 1.0, 181, "{0:F3}")]
+    public double HeatShieldAblationFluxExponent = 0.5;
+#endif
+}
+
 // ReduxLib itself is a monobehaviour because it needs to be
 public class ReduxLib : MonoBehaviour
 {
     public const string REDUX_FOLDER = "Redux";
     private const string CONFIG_LOCATION = "./Redux/config.json";
-
-    private const string LOGGING_CONFIG_SECTION = "Logging";
-    private const string FLIGHT_INPUT_CONFIG_SECTION = "Flight Input";
-#if INTERNAL
-    private const string THERMALS_CONFIG_SECTION = "Thermals";
-#endif
-    private const string ADVANCED_CONFIG_SECTION = "Advanced";
-    private const string STARTUP_CONFIG_SECTION = "Startup";
 
     public static ReduxLib Instance { get; private set; } = null!;
     public static ILogProvider ReduxLogProvider;
@@ -34,29 +96,17 @@ public class ReduxLib : MonoBehaviour
 
     public static IConfigFile ReduxCoreConfig;
 
-    private static ConfigValue<LogLevel> _filterLogLevel;
-    private static ConfigValue<string> _logTimestampFormat;
+    internal static readonly ReduxLibConfig Config = new();
 
-    private static ConfigValue<bool> _usePhysicsAutosync;
-    private static ConfigValue<bool> _disablePhotosensitivityWarning;
+    public static string TimestampFormat => Config.LogTimestampFormat;
+    public static bool DisablePhotosensitivityWarning => Config.DisablePhotosensitivityWarning;
 
-    private static ConfigValue<float> _flightInputNormalSensitivity;
-    private static ConfigValue<float> _flightInputNormalGravity;
-    private static ConfigValue<float> _flightInputPrecisionRate;
-    private static ConfigValue<float> _flightInputPrecisionGravity;
+    public static float FlightInputNormalSensitivity => Config.FlightInputNormalSensitivity;
+    public static float FlightInputNormalGravity => Config.FlightInputNormalGravity;
+    public static float FlightInputPrecisionRate => Config.FlightInputPrecisionRate;
+    public static float FlightInputPrecisionGravity => Config.FlightInputPrecisionGravity;
 #if INTERNAL
-    private static ConfigValue<double> _heatShieldAblationFluxExponent;
-#endif
-
-    public static string TimestampFormat => _logTimestampFormat.Value;
-    public static bool DisablePhotosensitivityWarning => _disablePhotosensitivityWarning.Value;
-
-    public static float FlightInputNormalSensitivity => _flightInputNormalSensitivity.Value;
-    public static float FlightInputNormalGravity => _flightInputNormalGravity.Value;
-    public static float FlightInputPrecisionRate => _flightInputPrecisionRate.Value;
-    public static float FlightInputPrecisionGravity => _flightInputPrecisionGravity.Value;
-#if INTERNAL
-    public static double HeatShieldAblationFluxExponent => _heatShieldAblationFluxExponent.Value;
+    public static double HeatShieldAblationFluxExponent => Config.HeatShieldAblationFluxExponent;
 #else
     public static double HeatShieldAblationFluxExponent => 0.5;
 #endif
@@ -70,96 +120,16 @@ public class ReduxLib : MonoBehaviour
             Directory.CreateDirectory("./Redux/Config");
         }
         ReduxCoreConfig = new JsonConfigFile(CONFIG_LOCATION);
-        _filterLogLevel =
-            new ConfigValue<LogLevel>(
-                ReduxCoreConfig.Bind(
-                    LOGGING_CONFIG_SECTION,
-                    "Filter Level",
-                    LogLevel.Info,
-                    "The current log level filter"
-                )
-            );
-        _logTimestampFormat = new ConfigValue<string>(
-            ReduxCoreConfig.Bind(
-                LOGGING_CONFIG_SECTION,
-                "Timestamp Format",
-                "HH:mm:ss.fff",
-                "The timestamp format for logs\n(in C#'s Datetime.ToString format)"
-            )
-        );
-        _usePhysicsAutosync = new ConfigValue<bool>(
-            ReduxCoreConfig.Bind(
-                ADVANCED_CONFIG_SECTION,
-                "Use Unity physics auto sync",
-                false,
-                "Enable Unity's Physics.autoSyncTransforms (slower) option for troubleshooting purposes. Please file a bug report if enabling this fixes a physics issue."
-            )
-        );
-        _disablePhotosensitivityWarning = new ConfigValue<bool>(
-            ReduxCoreConfig.Bind(
-                STARTUP_CONFIG_SECTION,
-                "Disable photosensitivity warning",
-                false,
-                "Skips the startup photosensitivity warning."
-            )
-        );
-        _flightInputNormalSensitivity = new ConfigValue<float>(
-            ReduxCoreConfig.Bind(
-                FLIGHT_INPUT_CONFIG_SECTION,
-                "Normal Sensitivity",
-                8f,
-                "Units per second to ramp keyboard pitch, yaw, and roll input toward +/-1 while held.",
-                new RangeConstraint<float>(0f, 20f, 400)
-            )
-        );
-        _flightInputNormalGravity = new ConfigValue<float>(
-            ReduxCoreConfig.Bind(
-                FLIGHT_INPUT_CONFIG_SECTION,
-                "Normal Decay",
-                8f,
-                "Units per second to return keyboard pitch, yaw, and roll input toward 0 after release.",
-                new RangeConstraint<float>(0f, 20f, 400)
-            )
-        );
-        _flightInputPrecisionRate = new ConfigValue<float>(
-            ReduxCoreConfig.Bind(
-                FLIGHT_INPUT_CONFIG_SECTION,
-                "Precision Rate",
-                0.4f,
-                "Units per second to accumulate pitch, yaw, and roll input while precision mode keys are held.",
-                new RangeConstraint<float>(0f, 5f, 500)
-            )
-        );
-        _flightInputPrecisionGravity = new ConfigValue<float>(
-            ReduxCoreConfig.Bind(
-                FLIGHT_INPUT_CONFIG_SECTION,
-                "Precision Decay",
-                1f,
-                "Units per second to return accumulated precision mode pitch, yaw, and roll input toward 0.",
-                new RangeConstraint<float>(0f, 5f, 500)
-            )
-        );
-#if INTERNAL
-        _heatShieldAblationFluxExponent = new ConfigValue<double>(
-            ReduxCoreConfig.Bind(
-                THERMALS_CONFIG_SECTION,
-                "Heat Shield Ablation Flux Exponent",
-                0.5,
-                "The main tuning value for how harshly heat shield ablation scales at high reentry flux.",
-                new RangeConstraint<double>(0.1, 1.0, 181, "{0:F3}")
-            )
-        );
-#endif
-
+        ReduxCoreConfig.Bind(Config);
 
         ReduxLogProvider = new UnityLogProvider
         {
-            CurrentFilterLevel = _filterLogLevel.Value,
+            CurrentFilterLevel = Config.FilterLogLevel.Value,
         };
-        Physics.autoSyncTransforms = _usePhysicsAutosync.Value;
+        Physics.autoSyncTransforms = Config.UsePhysicsAutosync.Value;
 
-        _filterLogLevel.RegisterCallback((_, to) => ReduxLogProvider.CurrentFilterLevel = to);
-        _usePhysicsAutosync.RegisterCallback((_, to) => Physics.autoSyncTransforms = to);
+        Config.FilterLogLevel.RegisterCallback((_, to) => ReduxLogProvider.CurrentFilterLevel = to);
+        Config.UsePhysicsAutosync.RegisterCallback((_, to) => Physics.autoSyncTransforms = to);
         Logger = ReduxLogProvider.GetLogger("Redux Lib");
         Logger.LogInfo("Redux Lib Pre Initialized!");
     }
