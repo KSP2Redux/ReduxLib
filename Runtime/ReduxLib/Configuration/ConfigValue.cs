@@ -10,11 +10,13 @@ namespace ReduxLib.Configuration;
 [PublicAPI]
 public class ConfigValue<T>
 {
+    private IConfigEntry _entry;
+
     /// <summary>
     /// The underlying <see cref="IConfigEntry"/>.
     /// </summary>
-    public IConfigEntry Entry;
-
+    public virtual IConfigEntry Entry => _entry;
+    
     /// <summary>
     /// Creates a new <see cref="ConfigValue{T}"/> from an <see cref="IConfigEntry"/>.
     /// </summary>
@@ -24,7 +26,7 @@ public class ConfigValue<T>
     /// </exception>
     public ConfigValue(IConfigEntry entry)
     {
-        Entry = entry;
+        _entry = entry;
         if (typeof(T) != entry.ValueType)
         {
             throw new ArgumentException(nameof(entry));
@@ -34,20 +36,20 @@ public class ConfigValue<T>
     /// <summary>
     /// The value of the entry.
     /// </summary>
-    public T Value
+    public virtual T Value
     {
-        get => (T)Entry.Value;
-        set => Entry.Value = value;
+        get => (T)_entry.Value;
+        set => _entry.Value = value;
     }
 
     /// <summary>
     /// Registers a callback that will be invoked when the value changes.
     /// </summary>
     /// <param name="callback">The callback to invoke.</param>
-    public void RegisterCallback(Action<T, T> callback)
+    public virtual void RegisterCallback(Action<T, T> callback)
     {
         // Callbacks += callback;
-        Entry.RegisterCallback(NewCallback);
+        _entry.RegisterCallback(NewCallback);
         return;
 
         void NewCallback(object from, object to)

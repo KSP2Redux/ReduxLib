@@ -29,17 +29,26 @@ public class JsonConfigEntry : IConfigEntry
         JsonConfigFile configFile,
         Type type,
         string description,
-        object value,
-        IValueConstraint? constraint = null
+        object value, IValueConstraint? constraint = null, 
+        string? nameLocalizationKey = null,
+        string? descriptionLocalizationKey = null
     )
     {
         _configFile = configFile;
         _value = value;
+        NameLocalizationKey = nameLocalizationKey;
+        DescriptionLocalizationKey = descriptionLocalizationKey;
         Default = value;
         Constraint = constraint;
         Description = description;
         ValueType = type;
     }
+
+    /// <inheritdoc />
+    public string? NameLocalizationKey { get; }
+
+    /// <inheritdoc />
+    public string? DescriptionLocalizationKey { get; }
 
     /// <inheritdoc />
     public object Value
