@@ -114,31 +114,30 @@ public static class ConfigExtensions
             }
             else
             {
-                IConfigEntry entry;
+                IValueConstraint? constraint = null;
                 if (cla != null)
                 {
                     RequireEquatable(memberType, member);
-                    entry = section.BindEntry(cva.Name, value, cva.Description, cla.ToListConstraint(memberType),
-                        cva.NameLocalizationKey,
-                        cva.DescriptionLocalizationKey);
+                    constraint = cla.ToListConstraint(memberType);
                 }
                 else if (cra != null)
                 {
                     RequireComparable(memberType, member);
-                    entry = section.BindEntry(cva.Name, value, cva.Description, cra.ToRangeConstraint(memberType),
-                        cva.NameLocalizationKey,
-                        cva.DescriptionLocalizationKey);
-                }
-                else
-                {
-                    entry = section.BindEntry(cva.Name, value, cva.Description, null, cva.NameLocalizationKey,
-                        cva.DescriptionLocalizationKey);
+                    constraint = cra.ToRangeConstraint(memberType);
                 }
 
+                var entry = (IConfigEntry)_bindPlainTyped.MakeGenericMethod(memberType)
+                    .Invoke(null, new[] { section, cva, value, constraint })!;
                 entry.RegisterCallback((_, n) => member.SetMemberValue(o, n));
             }
         }
     }
+
+    private static readonly MethodInfo _bindPlainTyped = typeof(ConfigExtensions).GetMethod(
+        nameof(BindPlainTyped), BindingFlags.Static | BindingFlags.NonPublic)!;
+
+    private static IConfigEntry BindPlainTyped<T>(IConfigSection section, ConfigValueAttribute cva, T value, IValueConstraint? constraint)
+        => section.BindEntry(cva.Name, value, cva.Description, constraint, cva.NameLocalizationKey, cva.DescriptionLocalizationKey);
 
     private static void RequireEquatable(Type t, MemberInfo member)
     {

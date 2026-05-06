@@ -27,7 +27,7 @@ public class ConfigValue<T>
     public ConfigValue(IConfigEntry entry)
     {
         _entry = entry;
-        if (typeof(T) != entry.ValueType)
+        if (entry != null && typeof(T) != entry.ValueType)
         {
             throw new ArgumentException(nameof(entry));
         }
