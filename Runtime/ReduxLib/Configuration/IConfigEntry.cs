@@ -10,6 +10,16 @@ namespace ReduxLib.Configuration;
 public interface IConfigEntry
 {
     /// <summary>
+    /// The localization key for the config entry's name in the settings menu
+    /// </summary>
+    public string? NameLocalizationKey { get; }
+
+    /// <summary>
+    /// The localization key for the config entry's description in the settings menu
+    /// </summary>
+    public string? DescriptionLocalizationKey { get; }
+
+    /// <summary>
     /// The value of the config entry
     /// </summary>
     public object Value { get; set; }

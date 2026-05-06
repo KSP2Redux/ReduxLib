@@ -1,4 +1,3 @@
-﻿using System.Collections.Generic;
 using JetBrains.Annotations;
 
 namespace ReduxLib.Configuration;
@@ -12,14 +11,31 @@ public interface IConfigFile
     /// <summary>
     /// Saves the configuration file.
     /// </summary>
-    public void Save();
+    void Save();
+
+    /// <summary>
+    /// All sections in the configuration file, in declaration order. Also indexable by section name.
+    /// </summary>
+    ConfigSectionList Sections { get; }
+
+    /// <summary>
+    /// Gets the section with the given name, creating it if it doesn't exist yet.
+    /// </summary>
+    IConfigSection GetOrCreateSection(string name) => GetOrCreateSection(name, null);
+
+    /// <summary>
+    /// Gets the section with the given name, creating it if it doesn't exist yet.
+    /// If the section is being created, <paramref name="localizationKey" /> is used as its
+    /// localization key. If the section already exists, its existing localization key is preserved.
+    /// </summary>
+    IConfigSection GetOrCreateSection(string name, string? localizationKey);
 
     /// <summary>
     /// Gets the <see cref="IConfigEntry" /> with the specified section and key.
     /// </summary>
     /// <param name="section">Section of the entry.</param>
     /// <param name="key">Key of the entry.</param>
-    public IConfigEntry this[string section, string key] { get; }
+    IConfigEntry this[string section, string key] => Sections[section][key];
 
     /// <summary>
     /// Binds a new <see cref="IConfigEntry" /> to the specified section and key.
@@ -31,27 +47,17 @@ public interface IConfigFile
     /// <param name="constraint">The initial constraint of the entry.</param>
     /// <typeparam name="T">Type of the entry.</typeparam>
     /// <returns>The bound <see cref="IConfigEntry" />.</returns>
-    public IConfigEntry Bind<T>(string section, string key, T? defaultValue = default, string description = "", IValueConstraint? constraint = null);
+    IConfigEntry Bind<T>(string section, string key, T? defaultValue = default, string description = "", IValueConstraint? constraint = null)
+        => GetOrCreateSection(section).Bind(key, defaultValue, description, constraint);
 
     /// <summary>
-    /// A list of all sections in the configuration file.
+    /// Resets every entry in every section to its default value.
     /// </summary>
-    public IReadOnlyList<string> Sections { get; }
-
-    /// <summary>
-    /// A list of all keys in the specified section.
-    /// </summary>
-    /// <param name="section"></param>
-    public IReadOnlyList<string> this[string section] { get; }
-
-    public void Reset()
+    void Reset()
     {
         foreach (var section in Sections)
         {
-            foreach (var config in this[section])
-            {
-                this[section, config].Value = this[section, config].Default;
-            }
+            section.Reset();
         }
     }
 }
