@@ -69,9 +69,7 @@ internal class ReduxLibConfig
 #if INTERNAL
     [ConfigSection("Thermals", loc: "Menu/Settings/Sections/Thermals")]
     [ConfigValue("Heat Shield Ablation Flux Exponent",
-        "The main tuning value for how harshly heat shield ablation scales at high reentry flux.",
-        nameLoc: "Menu/Settings/HeatShieldAblationFluxExponent",
-        descLoc: "Menu/Settings/Description/HeatShieldAblationFluxExponent")]
+        "The main tuning value for how harshly heat shield ablation scales at high reentry flux.")]
     [ConfigRange(0.1, 1.0, 181, "{0:F3}")]
     public double HeatShieldAblationFluxExponent = 0.5;
 #endif
