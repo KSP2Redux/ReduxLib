@@ -12,6 +12,10 @@ public interface IInputManager
 
     public void RestoreUitkInputLocks();
 
+    public void SetUitkTextInputLocks();
+
+    public void RestoreUitkTextInputLocks();
+
     public void BindHideAction(Action<bool> onHide);
     public void UnbindHideAction(Action<bool> onHide);
 }
