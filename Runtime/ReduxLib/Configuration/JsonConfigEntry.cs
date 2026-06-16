@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 
 namespace ReduxLib.Configuration;
@@ -11,6 +12,7 @@ public class JsonConfigEntry : IConfigEntry
 {
     private readonly JsonConfigFile _configFile;
     private object _value;
+    private readonly HashSet<string> _tags;
 
     /// <summary>
     /// The callbacks that are invoked when the value of this entry changes.
@@ -29,9 +31,10 @@ public class JsonConfigEntry : IConfigEntry
         JsonConfigFile configFile,
         Type type,
         string description,
-        object value, IValueConstraint? constraint = null, 
+        object value, IValueConstraint? constraint = null,
         string? nameLocalizationKey = null,
-        string? descriptionLocalizationKey = null
+        string? descriptionLocalizationKey = null,
+        IEnumerable<string>? tags = null
     )
     {
         _configFile = configFile;
@@ -42,6 +45,7 @@ public class JsonConfigEntry : IConfigEntry
         Constraint = constraint;
         Description = description;
         ValueType = type;
+        _tags = tags != null ? new HashSet<string>(tags) : new HashSet<string>();
     }
 
     /// <inheritdoc />
@@ -104,4 +108,10 @@ public class JsonConfigEntry : IConfigEntry
     {
         Callbacks += valueChangedCallback;
     }
+
+    /// <inheritdoc />
+    public IReadOnlyCollection<string> Tags => _tags;
+
+    /// <inheritdoc />
+    public bool HasTag(string tag) => _tags.Contains(tag);
 }

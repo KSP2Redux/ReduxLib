@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 
 namespace ReduxLib.Configuration;
@@ -65,4 +66,15 @@ public interface IConfigEntry
     /// An action that takes the old value and the new value and calls a callback
     /// </param>
     public void RegisterCallback(Action<object, object>? valueChangedCallback);
+
+    /// <summary>
+    /// The metadata tags declared on this entry. Declared at registration, not persisted in the config file.
+    /// </summary>
+    public IReadOnlyCollection<string> Tags { get; }
+
+    /// <summary>
+    /// Whether this entry carries the given metadata tag.
+    /// </summary>
+    /// <param name="tag">The tag to check for.</param>
+    public bool HasTag(string tag);
 }
