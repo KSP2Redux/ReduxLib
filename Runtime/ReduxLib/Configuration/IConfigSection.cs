@@ -16,7 +16,7 @@ public interface IConfigSection
     string Name { get; }
 
     /// <summary>
-    /// The localization key for the section
+    /// The localization key for the section.
     /// </summary>
     string? LocalizationKey { get; }
 
@@ -48,6 +48,7 @@ public interface IConfigSection
     /// <param name="constraint">The initial constraint of the entry.</param>
     /// <param name="nameLocalizationKey">Localization key for the entry's display name.</param>
     /// <param name="descriptionLocalizationKey">Localization key for the entry's description.</param>
+    /// <param name="tags">Metadata tags declared on the entry.</param>
     /// <typeparam name="T">Type of the entry.</typeparam>
     /// <returns>The bound <see cref="IConfigEntry" />.</returns>
     IConfigEntry BindEntry<T>(
@@ -71,6 +72,7 @@ public interface IConfigSection
     /// <param name="constraint">The initial constraint of the entry.</param>
     /// <param name="nameLocalizationKey">Localization key for the entry's display name.</param>
     /// <param name="descriptionLocalizationKey">Localization key for the entry's description.</param>
+    /// <param name="tags">Metadata tags declared on the entry.</param>
     /// <returns>The bound <see cref="IConfigEntry" />.</returns>
     IConfigEntry BindEntry(
         Type valueType,

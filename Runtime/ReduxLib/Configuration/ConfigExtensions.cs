@@ -6,7 +6,7 @@ using ReduxLib.Configuration.Attributes;
 namespace ReduxLib.Configuration;
 
 /// <summary>
-/// Extensions to IConfigFile for binding to an object
+/// Extensions to <see cref="IConfigFile" /> for binding to an object.
 /// </summary>
 public static class ConfigExtensions
 {
@@ -29,7 +29,7 @@ public static class ConfigExtensions
         }
     }
 
-    static Type GetMemberType(this MemberInfo m) => m switch
+    private static Type GetMemberType(this MemberInfo m) => m switch
     {
         FieldInfo f => f.FieldType,
         PropertyInfo p => p.PropertyType,
@@ -67,10 +67,10 @@ public static class ConfigExtensions
     }
 
     /// <summary>
-    /// Bind the given object to the configuration file
+    /// Binds the given object to the configuration file.
     /// </summary>
-    /// <param name="file">The current file</param>
-    /// <param name="o">The object to bind</param>
+    /// <param name="file">The current file.</param>
+    /// <param name="o">The object to bind.</param>
     public static void Bind(this IConfigFile file, object o)
     {
         var type = o.GetType();
@@ -106,7 +106,7 @@ public static class ConfigExtensions
             {
                 if (!value.IsConfigDescriptionOrNull())
                 {
-                    throw new Exception(
+                    throw new InvalidOperationException(
                         $"Cannot bind {member.Name} to config description as its assigned value must either be ConfigDescription<T> or null");
                 }
                 if (cla != null) RequireEquatable(wrappedType, member);
@@ -160,7 +160,7 @@ public static class ConfigExtensions
         }
     }
 
-    private static MethodInfo _genericWrapping = typeof(ConfigExtensions).GetMethod(nameof(HandleGenericWrapping),
+    private static readonly MethodInfo _genericWrapping = typeof(ConfigExtensions).GetMethod(nameof(HandleGenericWrapping),
         BindingFlags.Static | BindingFlags.NonPublic)!;
 
     private static object HandleGenericWrapping<T>(IConfigSection section, ConfigValueAttribute cva, ConfigDescription<T>? description,

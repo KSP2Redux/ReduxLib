@@ -27,6 +27,9 @@ public class JsonConfigEntry : IConfigEntry
     /// <param name="description">Description of the value.</param>
     /// <param name="value">Value of the entry.</param>
     /// <param name="constraint">Constraint of the value.</param>
+    /// <param name="nameLocalizationKey">Localization key for the entry's display name.</param>
+    /// <param name="descriptionLocalizationKey">Localization key for the entry's description.</param>
+    /// <param name="tags">Metadata tags declared on the entry.</param>
     public JsonConfigEntry(
         JsonConfigFile configFile,
         Type type,
@@ -67,6 +70,7 @@ public class JsonConfigEntry : IConfigEntry
         }
     }
 
+    /// <inheritdoc />
     public object Default { get; }
 
     /// <inheritdoc />
@@ -114,4 +118,11 @@ public class JsonConfigEntry : IConfigEntry
 
     /// <inheritdoc />
     public bool HasTag(string tag) => _tags.Contains(tag);
+
+    // Tags are declared at registration, not persisted, so a re-bind unions them in without touching the file.
+    internal void MergeTags(IEnumerable<string>? tags)
+    {
+        if (tags == null) return;
+        foreach (var tag in tags) _tags.Add(tag);
+    }
 }

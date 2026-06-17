@@ -21,7 +21,7 @@ public class JsonConfigSection : IConfigSection
     /// <inheritdoc />
     public string Name { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public string? LocalizationKey { get; }
 
     internal JsonConfigSection(JsonConfigFile file, string name, JObject? previousSlice, string? localizationKey)
@@ -52,6 +52,7 @@ public class JsonConfigSection : IConfigSection
     {
         if (Entries.TryGetValue(key, out var existing))
         {
+            existing.MergeTags(tags);
             return existing;
         }
 
@@ -78,7 +79,7 @@ public class JsonConfigSection : IConfigSection
 
     internal void WriteTo(StringBuilder result)
     {
-        result.AppendLine($"    \"{Name.Replace("\"", "\\\"").Replace("\n", "\\\n")}\": {{");
+        result.AppendLine($"    \"{Name.Replace("\"", "\\\"").Replace("\n", "\\n")}\": {{");
         var hadPreviousKey = false;
         foreach (var entry in Entries)
         {

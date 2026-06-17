@@ -3,17 +3,19 @@ using System;
 namespace ReduxLib.Configuration.Attributes;
 
 /// <summary>
-/// Attaches a metadata tag to a config value, alongside <see cref="ConfigValueAttribute" />. Multiple tags
-/// are allowed. Tags are inert until some system polls the ones it cares about (there is no tag-to-behavior
-/// registry).
+/// Attaches a metadata tag to a config value, alongside <see cref="ConfigValueAttribute" />.
 /// </summary>
+/// <remarks>
+/// Multiple tags are allowed. Tags are inert until some system polls the ones it cares about. There is no
+/// tag-to-behavior registry.
+/// </remarks>
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
-public class ConfigMetadataAttribute : Attribute
+public sealed class ConfigMetadataAttribute : Attribute
 {
     /// <summary>
     /// The tag name.
     /// </summary>
-    public string Tag;
+    public string Tag { get; }
 
     /// <summary>
     /// Creates a new config metadata tag.
