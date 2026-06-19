@@ -94,7 +94,9 @@ public class ReduxLib : MonoBehaviour
 
     public static IConfigFile ReduxCoreConfig;
 
-    internal static readonly ReduxLibConfig Config = new();
+    // Not readonly: re-created at the start of PreInitializeReduxLib so that, with Domain Reload
+    // disabled, each Play Mode enter re-binds a fresh config object. See PreInitializeReduxLib.
+    internal static ReduxLibConfig Config = new();
 
     public static string TimestampFormat => Config.LogTimestampFormat;
     public static bool DisablePhotosensitivityWarning => Config.DisablePhotosensitivityWarning;
@@ -117,6 +119,15 @@ public class ReduxLib : MonoBehaviour
         {
             Directory.CreateDirectory("./Redux/Config");
         }
+        // Bind() replaces each [ConfigValue] field on the bound object with a live ConfigValue<T>
+        // wrapper, so an object can only be bound once. With Domain Reload disabled the static Config
+        // survives across Play Mode sessions still holding the bound wrappers from the previous run,
+        // and re-binding it throws ("...must either be ConfigDescription<T> or null"). Re-create it
+        // each enter so binding starts from fresh ConfigDescription defaults; the actual values are
+        // re-loaded from the on-disk JSON below. The previous Config instance (and its ConfigValues /
+        // their callbacks) becomes garbage, so the callbacks below register fresh each enter without
+        // accumulating duplicates.
+        Config = new ReduxLibConfig();
         ReduxCoreConfig = new JsonConfigFile(CONFIG_LOCATION);
         ReduxCoreConfig.Bind(Config);
 
@@ -126,6 +137,8 @@ public class ReduxLib : MonoBehaviour
         };
         Physics.autoSyncTransforms = Config.UsePhysicsAutosync.Value;
 
+        // The lambdas read the current static ReduxLogProvider, so they stay correct even though it is
+        // reassigned each enter.
         Config.FilterLogLevel.RegisterCallback((_, to) => ReduxLogProvider.CurrentFilterLevel = to);
         Config.UsePhysicsAutosync.RegisterCallback((_, to) => Physics.autoSyncTransforms = to);
         Logger = ReduxLogProvider.GetLogger("Redux Lib");

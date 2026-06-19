@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using UnityEngine;
 
 namespace ReduxLib.Messaging;
 
@@ -11,6 +12,12 @@ namespace ReduxLib.Messaging;
 public static class MessageBusManager
 {
     private static Dictionary<string, MessageBusBase> _messagesBusesByName = new();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStaticState()
+    {
+        _messagesBusesByName = new();
+    }
 
     /// <summary>
     /// Creates a new MessageBus instance with the given name.

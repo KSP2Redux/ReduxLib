@@ -1,4 +1,5 @@
 using System.Collections;
+using UnityEngine;
 
 namespace ReduxLib;
 
@@ -7,6 +8,13 @@ public static class StartupDialogGate
     public static bool IsStartupPresentationActive { get; private set; }
 
     public static bool IsStartupLegalFlowActive { get; private set; }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStaticState()
+    {
+        IsStartupPresentationActive = false;
+        IsStartupLegalFlowActive = false;
+    }
 
     public static bool IsBlockingDialogs => IsStartupPresentationActive || IsStartupLegalFlowActive;
 
