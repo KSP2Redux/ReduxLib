@@ -6,7 +6,7 @@ using ReduxLib.Configuration.Attributes;
 namespace ReduxLib.Configuration;
 
 /// <summary>
-/// Extensions to IConfigFile for binding to an object
+/// Extensions to <see cref="IConfigFile" /> for binding to an object.
 /// </summary>
 public static class ConfigExtensions
 {
@@ -29,7 +29,7 @@ public static class ConfigExtensions
         }
     }
 
-    static Type GetMemberType(this MemberInfo m) => m switch
+    private static Type GetMemberType(this MemberInfo m) => m switch
     {
         FieldInfo f => f.FieldType,
         PropertyInfo p => p.PropertyType,
@@ -67,10 +67,10 @@ public static class ConfigExtensions
     }
 
     /// <summary>
-    /// Bind the given object to the configuration file
+    /// Binds the given object to the configuration file.
     /// </summary>
-    /// <param name="file">The current file</param>
-    /// <param name="o">The object to bind</param>
+    /// <param name="file">The current file.</param>
+    /// <param name="o">The object to bind.</param>
     public static void Bind(this IConfigFile file, object o)
     {
         var type = o.GetType();
@@ -93,6 +93,7 @@ public static class ConfigExtensions
             }
 
             if (cva == null) continue;
+            var tags = member.GetCustomAttributes<ConfigMetadataAttribute>().Select(a => a.Tag).ToArray();
             if (lastSectionName == null)
             {
                 throw new InvalidOperationException(
@@ -105,12 +106,12 @@ public static class ConfigExtensions
             {
                 if (!value.IsConfigDescriptionOrNull())
                 {
-                    throw new Exception(
+                    throw new InvalidOperationException(
                         $"Cannot bind {member.Name} to config description as its assigned value must either be ConfigDescription<T> or null");
                 }
                 if (cla != null) RequireEquatable(wrappedType, member);
                 if (cra != null) RequireComparable(wrappedType, member);
-                member.SetMemberValue(o, _genericWrapping.MakeGenericMethod(wrappedType).Invoke(null, new[]{section, cva, value, cla, cra}));
+                member.SetMemberValue(o, _genericWrapping.MakeGenericMethod(wrappedType).Invoke(null, new object[]{section, cva, value, cla, cra, tags}));
             }
             else
             {
@@ -127,7 +128,7 @@ public static class ConfigExtensions
                 }
 
                 var entry = (IConfigEntry)_bindPlainTyped.MakeGenericMethod(memberType)
-                    .Invoke(null, new[] { section, cva, value, constraint })!;
+                    .Invoke(null, new object[] { section, cva, value, constraint, tags })!;
                 entry.RegisterCallback((_, n) => member.SetMemberValue(o, n));
             }
         }
@@ -136,8 +137,8 @@ public static class ConfigExtensions
     private static readonly MethodInfo _bindPlainTyped = typeof(ConfigExtensions).GetMethod(
         nameof(BindPlainTyped), BindingFlags.Static | BindingFlags.NonPublic)!;
 
-    private static IConfigEntry BindPlainTyped<T>(IConfigSection section, ConfigValueAttribute cva, T value, IValueConstraint? constraint)
-        => section.BindEntry(cva.Name, value, cva.Description, constraint, cva.NameLocalizationKey, cva.DescriptionLocalizationKey);
+    private static IConfigEntry BindPlainTyped<T>(IConfigSection section, ConfigValueAttribute cva, T value, IValueConstraint? constraint, string[] tags)
+        => section.BindEntry(cva.Name, value, cva.Description, constraint, cva.NameLocalizationKey, cva.DescriptionLocalizationKey, tags);
 
     private static void RequireEquatable(Type t, MemberInfo member)
     {
@@ -159,11 +160,11 @@ public static class ConfigExtensions
         }
     }
 
-    private static MethodInfo _genericWrapping = typeof(ConfigExtensions).GetMethod(nameof(HandleGenericWrapping),
+    private static readonly MethodInfo _genericWrapping = typeof(ConfigExtensions).GetMethod(nameof(HandleGenericWrapping),
         BindingFlags.Static | BindingFlags.NonPublic)!;
 
     private static object HandleGenericWrapping<T>(IConfigSection section, ConfigValueAttribute cva, ConfigDescription<T>? description,
-        ConfigListAttribute? cla, ConfigRangeAttribute? cra)
+        ConfigListAttribute? cla, ConfigRangeAttribute? cra, string[] tags)
     {
         T? defValue = default;
         if (description != null)
@@ -171,7 +172,7 @@ public static class ConfigExtensions
             defValue = description.DefaultValue ?? default;
         }
         var constraint = description?.Constraint ?? cla?.ToListConstraint(typeof(T)) ?? cra?.ToRangeConstraint(typeof(T));
-        var entry = section.BindEntry(cva.Name, defValue, cva.Description, constraint, cva.NameLocalizationKey, cva.DescriptionLocalizationKey);
+        var entry = section.BindEntry(cva.Name, defValue, cva.Description, constraint, cva.NameLocalizationKey, cva.DescriptionLocalizationKey, tags);
         var result = new ConfigValue<T>(entry);
         if (description == null) return result;
         foreach (var cb in description.PreRegisteredCallbacks)

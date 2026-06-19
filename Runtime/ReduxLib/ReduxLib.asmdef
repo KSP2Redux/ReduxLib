@@ -1,4 +1,7 @@
-﻿{
+{
   "name": "ReduxLib",
-  "rootNamespace": "ReduxLib"
+  "rootNamespace": "ReduxLib",
+  "references": [
+    "GUID:b853308904cd452e2d727af5319566ce"
+  ]
 }

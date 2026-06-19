@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,7 +21,7 @@ public class JsonConfigSection : IConfigSection
     /// <inheritdoc />
     public string Name { get; }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public string? LocalizationKey { get; }
 
     internal JsonConfigSection(JsonConfigFile file, string name, JObject? previousSlice, string? localizationKey)
@@ -38,21 +39,20 @@ public class JsonConfigSection : IConfigSection
     public IReadOnlyList<string> Keys => Entries.Keys.ToList();
 
     /// <inheritdoc />
-    public IConfigEntry Bind<T>(string key, T? defaultValue = default, string description = "", IValueConstraint? constraint = null)
-        => BindEntry(key, defaultValue, description, constraint);
-
-    /// <inheritdoc />
-    public IConfigEntry BindEntry<T>(
+    public IConfigEntry BindEntry(
+        Type valueType,
         string key,
-        T? defaultValue = default,
+        object? defaultValue = null,
         string description = "",
         IValueConstraint? constraint = null,
         string? nameLocalizationKey = null,
-        string? descriptionLocalizationKey = null
+        string? descriptionLocalizationKey = null,
+        IEnumerable<string>? tags = null
     )
     {
         if (Entries.TryGetValue(key, out var existing))
         {
+            existing.MergeTags(tags);
             return existing;
         }
 
@@ -60,17 +60,17 @@ public class JsonConfigSection : IConfigSection
         {
             try
             {
-                var previousValue = token.ToObject(typeof(T));
-                Entries[key] = new JsonConfigEntry(_file, typeof(T), description, previousValue, constraint, nameLocalizationKey, descriptionLocalizationKey);
+                var previousValue = token.ToObject(valueType);
+                Entries[key] = new JsonConfigEntry(_file, valueType, description, previousValue, constraint, nameLocalizationKey, descriptionLocalizationKey, tags);
             }
             catch
             {
-                Entries[key] = new JsonConfigEntry(_file, typeof(T), description, defaultValue, constraint, nameLocalizationKey, descriptionLocalizationKey);
+                Entries[key] = new JsonConfigEntry(_file, valueType, description, defaultValue, constraint, nameLocalizationKey, descriptionLocalizationKey, tags);
             }
         }
         else
         {
-            Entries[key] = new JsonConfigEntry(_file, typeof(T), description, defaultValue, constraint, nameLocalizationKey, descriptionLocalizationKey);
+            Entries[key] = new JsonConfigEntry(_file, valueType, description, defaultValue, constraint, nameLocalizationKey, descriptionLocalizationKey, tags);
         }
 
         _file.Save();
@@ -79,7 +79,7 @@ public class JsonConfigSection : IConfigSection
 
     internal void WriteTo(StringBuilder result)
     {
-        result.AppendLine($"    \"{Name.Replace("\"", "\\\"").Replace("\n", "\\\n")}\": {{");
+        result.AppendLine($"    \"{Name.Replace("\"", "\\\"").Replace("\n", "\\n")}\": {{");
         var hadPreviousKey = false;
         foreach (var entry in Entries)
         {

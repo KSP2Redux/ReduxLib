@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 
 namespace ReduxLib.Configuration;
@@ -11,6 +12,7 @@ public class JsonConfigEntry : IConfigEntry
 {
     private readonly JsonConfigFile _configFile;
     private object _value;
+    private readonly HashSet<string> _tags;
 
     /// <summary>
     /// The callbacks that are invoked when the value of this entry changes.
@@ -25,13 +27,17 @@ public class JsonConfigEntry : IConfigEntry
     /// <param name="description">Description of the value.</param>
     /// <param name="value">Value of the entry.</param>
     /// <param name="constraint">Constraint of the value.</param>
+    /// <param name="nameLocalizationKey">Localization key for the entry's display name.</param>
+    /// <param name="descriptionLocalizationKey">Localization key for the entry's description.</param>
+    /// <param name="tags">Metadata tags declared on the entry.</param>
     public JsonConfigEntry(
         JsonConfigFile configFile,
         Type type,
         string description,
-        object value, IValueConstraint? constraint = null, 
+        object value, IValueConstraint? constraint = null,
         string? nameLocalizationKey = null,
-        string? descriptionLocalizationKey = null
+        string? descriptionLocalizationKey = null,
+        IEnumerable<string>? tags = null
     )
     {
         _configFile = configFile;
@@ -42,6 +48,7 @@ public class JsonConfigEntry : IConfigEntry
         Constraint = constraint;
         Description = description;
         ValueType = type;
+        _tags = tags != null ? new HashSet<string>(tags) : new HashSet<string>();
     }
 
     /// <inheritdoc />
@@ -63,6 +70,7 @@ public class JsonConfigEntry : IConfigEntry
         }
     }
 
+    /// <inheritdoc />
     public object Default { get; }
 
     /// <inheritdoc />
@@ -103,5 +111,18 @@ public class JsonConfigEntry : IConfigEntry
     public void RegisterCallback(Action<object, object>? valueChangedCallback)
     {
         Callbacks += valueChangedCallback;
+    }
+
+    /// <inheritdoc />
+    public IReadOnlyCollection<string> Tags => _tags;
+
+    /// <inheritdoc />
+    public bool HasTag(string tag) => _tags.Contains(tag);
+
+    // Tags are declared at registration, not persisted, so a re-bind unions them in without touching the file.
+    internal void MergeTags(IEnumerable<string>? tags)
+    {
+        if (tags == null) return;
+        foreach (var tag in tags) _tags.Add(tag);
     }
 }
