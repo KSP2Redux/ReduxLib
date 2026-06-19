@@ -97,6 +97,12 @@ public class JsonConfigFile : IConfigFile
 
     private static List<JsonConverter>? _defaultConverters;
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStaticState()
+    {
+        _defaultConverters = null;
+    }
+
     private static List<JsonConverter>? CreateDefaultConverters()
     {
         var method = Assembly.Load("Newtonsoft.Json.UnityConverters")

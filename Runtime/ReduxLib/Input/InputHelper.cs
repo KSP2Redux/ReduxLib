@@ -11,7 +11,15 @@ public static class InputHelper
     public static bool IsRebindingHappening { get; private set; }
     public static KeyBindRebindingOperation? ActiveKeyBindRebindingOperation;
     public static KeyboardShortcutRebindingOperation? ActiveKeyboardShortcutRebindingOperation;
-    
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStaticState()
+    {
+        IsRebindingHappening = false;
+        ActiveKeyBindRebindingOperation = null;
+        ActiveKeyboardShortcutRebindingOperation = null;
+    }
+
     public class KeyBindRebindingOperation
     {
         public event Action OnCancel;
