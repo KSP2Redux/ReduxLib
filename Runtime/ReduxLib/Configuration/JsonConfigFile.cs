@@ -79,15 +79,47 @@ public class JsonConfigFile : IConfigFile
             .ToList();
         if (nonEmptySections.Count == 0) return;
 
+        var boundSections = nonEmptySections.ToDictionary(section => section.Name);
+        var writtenSections = new HashSet<string>();
         var result = new StringBuilder();
         result.AppendLine("{");
         var hadPreviousSection = false;
-        foreach (var section in nonEmptySections)
+        if (_previousConfigObject != null)
         {
+            foreach (JProperty property in _previousConfigObject.Properties())
+            {
+                if (property.Value is not JObject previousSection)
+                    continue;
+
+                if (hadPreviousSection)
+                {
+                    result.AppendLine(",");
+                }
+
+                if (boundSections.TryGetValue(property.Name, out JsonConfigSection section))
+                {
+                    section.WriteTo(result);
+                }
+                else
+                {
+                    DumpPreviousSection(result, property.Name, previousSection);
+                }
+
+                writtenSections.Add(property.Name);
+                hadPreviousSection = true;
+            }
+        }
+
+        foreach (JsonConfigSection section in nonEmptySections)
+        {
+            if (!writtenSections.Add(section.Name))
+                continue;
+
             if (hadPreviousSection)
             {
                 result.AppendLine(",");
             }
+
             section.WriteTo(result);
             hadPreviousSection = true;
         }
@@ -183,4 +215,58 @@ public class JsonConfigFile : IConfigFile
 
         return true;
     }
+
+    internal static bool DumpPreviousEntry(
+        StringBuilder result,
+        bool hadPreviousKey,
+        JProperty property
+    )
+    {
+        if (hadPreviousKey)
+        {
+            result.AppendLine(",");
+        }
+
+        DumpProperty(result, property.Name, property.Value);
+        return true;
+    }
+
+    private static void DumpPreviousSection(StringBuilder result, string name, JObject section)
+    {
+        result.AppendLine($"    \"{EscapeKey(name)}\": {{");
+        bool hadPreviousKey = false;
+        foreach (JProperty property in section.Properties())
+        {
+            hadPreviousKey = DumpPreviousEntry(result, hadPreviousKey, property);
+        }
+
+        result.Append("\n    }");
+    }
+
+    private static void DumpProperty(StringBuilder result, string name, JToken value)
+    {
+        string serialized = value.ToString(Formatting.Indented);
+        string[] serializedLines = serialized.Split('\n').Select(x => x.TrimEnd()).ToArray();
+        if (serializedLines.Length > 1)
+        {
+            result.AppendLine($"        \"{EscapeKey(name)}\": ");
+            for (int i = 0; i < serializedLines.Length; i++)
+            {
+                if (i != serializedLines.Length - 1)
+                {
+                    result.AppendLine($"        {serializedLines[i]}");
+                }
+                else
+                {
+                    result.Append($"        {serializedLines[i]}");
+                }
+            }
+        }
+        else
+        {
+            result.Append($"        \"{EscapeKey(name)}\": {serializedLines[0]}");
+        }
+    }
+
+    private static string EscapeKey(string key) => key.Replace("\"", "\\\"").Replace("\n", "\\n");
 }

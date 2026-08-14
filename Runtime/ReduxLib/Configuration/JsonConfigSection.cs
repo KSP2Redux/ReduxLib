@@ -81,8 +81,33 @@ public class JsonConfigSection : IConfigSection
     {
         result.AppendLine($"    \"{Name.Replace("\"", "\\\"").Replace("\n", "\\n")}\": {{");
         var hadPreviousKey = false;
+        var writtenKeys = new HashSet<string>();
+        if (_previousSlice != null)
+        {
+            foreach (JProperty property in _previousSlice.Properties())
+            {
+                if (Entries.TryGetValue(property.Name, out JsonConfigEntry entry))
+                {
+                    hadPreviousKey = JsonConfigFile.DumpEntry(
+                        result,
+                        hadPreviousKey,
+                        new KeyValuePair<string, JsonConfigEntry>(property.Name, entry)
+                    );
+                }
+                else
+                {
+                    hadPreviousKey = JsonConfigFile.DumpPreviousEntry(result, hadPreviousKey, property);
+                }
+
+                writtenKeys.Add(property.Name);
+            }
+        }
+
         foreach (var entry in Entries)
         {
+            if (!writtenKeys.Add(entry.Key))
+                continue;
+
             hadPreviousKey = JsonConfigFile.DumpEntry(result, hadPreviousKey, entry);
         }
         result.Append("\n    }");
